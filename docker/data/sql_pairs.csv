@@ -1,0 +1,169 @@
+question,sql,project_id,created_at,updated_at
+請告訴我目前 dim_user_data 表中有多少筆總紀錄？,"-- 從 dim_user_data 表中計算總記錄數。
+SELECT
+  COUNT(*) AS ""total_records""
+FROM
+  ""dim_user_data"" AS ""_dim_user_data""",20,2025-05-16T04:28:56.000Z,2025-05-16T04:28:56.000Z
+每天註冊的用戶數量是多少？,"WITH
+  basic_registration_data AS
+  -- 從 dim_user_data 表中選擇註冊日期，將 joined_at_tw 轉換為帶時區的時間戳。
+  (
+    SELECT
+      DATE(
+        CAST(
+          ""_dim_user_data"".""joined_at_tw"" AS TIMESTAMP
+          WITH
+            TIME ZONE
+        )
+      ) AS ""registration_date""
+    FROM
+      ""dim_user_data"" AS ""_dim_user_data""
+  )
+  -- 對基本註冊數據進行分組，計算每天註冊的用戶數量，並按註冊日期排序。
+SELECT
+  ""registration_date"",
+  COUNT(*) AS ""daily_registered_users""
+FROM
+  ""basic_registration_data""
+GROUP BY
+  ""registration_date""
+ORDER BY
+  ""registration_date""",20,2025-05-16T04:40:02.000Z,2025-05-16T04:40:02.000Z
+每所學校的學生總數、用戶數（包含註冊、未註冊）及用戶佔學生比例是多少？,"SELECT
+  ""s"".""school_id_sha256"" AS ""school_id_sha256"",
+  ""s"".""school_name"" AS ""school_name"",
+  ""s"".""total_students_count"" AS ""total_students_count"",
+  COUNT(""u"".""user_id"") AS ""user_count"",
+  IF (
+    (""s"".""total_students_count"") <> 0,
+    (COUNT(""u"".""user_id"")) / (""s"".""total_students_count""),
+    NULL
+  ) AS ""user_percentage""
+FROM
+  ""dim_schools_metadata"" AS ""s""
+  LEFT JOIN ""dim_user_data"" AS ""u"" ON ""s"".""school_id_sha256"" = ""u"".""user_school_id_sha256""
+GROUP BY
+  ""s"".""school_id_sha256"",
+  ""s"".""school_name"",
+  ""s"".""total_students_count""",20,2025-05-16T05:49:50.000Z,2025-05-16T05:50:42.711Z
+知識點的使用情況在過去一年中有何變化？,"WITH
+  monthly_user_records AS
+  -- 選擇運動類內容的總積分和總花費時間，並按月份分組。
+  (
+    SELECT
+      SUM(""f"".""points_earned"") AS ""total_points_earned"",
+      SUM(""f"".""total_seconds_taken"") AS ""total_seconds_taken"",
+      DATE_TRUNC ('MONTH', ""f"".""created_at_tw"") AS ""month""
+    FROM
+      ""fct_user_records_of_all_contents"" AS ""f""
+    WHERE
+      ""f"".""content_kind"" = 'Exercise'
+      AND ""f"".""partition_date"" >= '2024-05-16'
+      AND ""f"".""partition_date"" < '2025-05-17' 
+    GROUP BY
+      3
+  )
+  -- 從按月份分組的結果中選擇月份、總積分和總花費時間，並按月份排序。
+SELECT
+  ""month"",
+  ""total_points_earned"",
+  ""total_seconds_taken""
+FROM
+  ""monthly_user_records""
+ORDER BY
+  ""month""",20,2025-05-16T06:41:18.000Z,2025-05-16T06:41:18.000Z
+在不同的學期類型和縣市中，有多少位 LV1 老師？,"WITH
+  lv1_teachers AS
+  -- 從 fct_teacher_level_score 表中選擇 LV1 老師的學期類型和教師用戶 ID。
+  (
+    SELECT
+      ""f"".""session_year_type_tw"" AS ""session_year_type_tw"",
+      ""f"".""teacher_user_id"" AS ""teacher_user_id""
+    FROM
+      ""fct_teacher_level_score"" AS ""f""
+    WHERE
+      ""f"".""teacher_level_score"" = 1
+  )
+  -- 將 LV1 老師與用戶數據表進行聯接，並按學期類型和縣市分組計算每個組的 LV1 老師數量。
+SELECT
+  ""lv1"".""session_year_type_tw"" AS ""session_year_type_tw"",
+  ""d"".""user_city"" AS ""user_city"",
+  COUNT(*) AS ""Lv1_Teacher_Count""
+FROM
+  ""lv1_teachers"" AS ""lv1""
+  JOIN ""dim_user_data"" AS ""d"" ON ""lv1"".""teacher_user_id"" = ""d"".""user_id""
+GROUP BY
+  ""lv1"".""session_year_type_tw"",
+  ""d"".""user_city""
+ORDER BY
+  ""lv1"".""session_year_type_tw"",
+  ""d"".""user_city""",20,2025-05-16T06:50:32.000Z,2025-05-16T06:50:32.000Z
+可以按照學期（考慮 dim_dates）列出每個學期的 Lv1 老師及其縣市分佈嗎？,"WITH
+  lv1_teachers AS
+  -- 從 fct_teacher_level_score 表中選擇 LV1 老師的學期類型和教師用戶 ID。
+  (
+    SELECT
+      ""f"".""session_year_type_tw"" AS ""session_year_type_tw"",
+      ""f"".""teacher_user_id"" AS ""teacher_user_id""
+    FROM
+      ""fct_teacher_level_score"" AS ""f""
+    WHERE
+      ""f"".""teacher_level_score"" = 1
+  )
+  -- 將 LV1 老師與用戶數據表進行聯接，並按學期類型和縣市分組計算每個組的 LV1 老師數量。
+SELECT
+  ""lv1"".""session_year_type_tw"" AS ""session_year_type_tw"",
+  ""d"".""user_city"" AS ""user_city"",
+  COUNT(*) AS ""Lv1_Teacher_Count""
+FROM
+  ""lv1_teachers"" AS ""lv1""
+  JOIN ""dim_user_data"" AS ""d"" ON ""lv1"".""teacher_user_id"" = ""d"".""user_id""
+GROUP BY
+  ""lv1"".""session_year_type_tw"",
+  ""d"".""user_city""
+ORDER BY
+  ""lv1"".""session_year_type_tw"",
+  ""d"".""user_city""",20,2025-05-16T07:06:28.000Z,2025-05-16T07:06:28.000Z
+在 dim_user_data 表中，總用戶數、註冊用戶數和註冊用戶的比例是多少？,"WITH
+  user_data AS
+  -- 從 dim_user_data 表中計算總用戶數和註冊用戶數。
+  (
+    SELECT
+      COUNT(*) AS ""total_users"",
+      COUNT(
+        CASE
+          WHEN ""d"".""is_registered"" THEN 1
+        END
+      ) AS ""registered_users""
+    FROM
+      ""dim_user_data"" AS ""d""
+  )
+  -- 計算註冊用戶的比例，並從 user_data CTE 中選擇總用戶數和註冊用戶數。
+SELECT
+  ""total_users"",
+  ""registered_users"",
+  CASE
+    WHEN ""total_users"" > 0 THEN ""registered_users"" * 1.0 / ""total_users""
+    ELSE NULL
+  END AS ""registered_user_percentage""
+FROM
+  ""user_data""",20,2025-06-19T22:02:45.000Z,2025-06-19T22:02:45.000Z
+每個使用者角色有多少人？,"-- CTE: 使用者統計 - 計算每個角色的使用者數量
+WITH user_role_stats AS (
+  SELECT 
+    user_role,
+    COUNT(*) as user_count
+  FROM dim_user_data 
+  GROUP BY user_role
+)
+SELECT * FROM user_role_stats ORDER BY user_count DESC;",20,2025-06-19T23:01:26.000Z,2025-06-19T23:01:26.000Z
+測試問題,SELECT COUNT(*) FROM dim_user_data,20,2025-06-19T23:02:56.000Z,2025-06-19T23:02:56.000Z
+測試 CTE,"-- CTE: 測試 - 簡單測試
+WITH test AS (SELECT 1 as id)
+SELECT * FROM test",20,2025-06-19T23:03:06.000Z,2025-06-19T23:03:06.000Z
+每個使用者角色有多少人？（測試）,"-- CTE: 使用者統計 - 計算使用者總數
+WITH user_stats AS (
+  SELECT user_role, COUNT(*) as user_count
+  FROM dim_user_data GROUP BY user_role
+)
+SELECT user_role, user_count FROM user_stats ORDER BY user_count DESC;",20,2025-06-19T23:03:55.000Z,2025-06-19T23:03:55.000Z

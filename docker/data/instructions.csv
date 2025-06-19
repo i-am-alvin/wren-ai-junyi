@@ -1,0 +1,143 @@
+instruction_id,instruction,questions,is_default,project_id,created_at,updated_at
+exported_instruction_1,使用標準 CTE 進行 SQL Coding,,true,20,2025-05-16T05:51:12.856Z,2025-05-16T05:51:12.856Z
+exported_instruction_2,"通用規則 (General Rules):
+時間維度 (Time Dimension):
+資料中大量使用 created_at_tw (建立時間), updated_at_tw (更新時間), due_at_tw (截止時間), schedule_at_tw (排程時間), joined_at_tw (加入時間), first_visit_date (首次訪問日期), last_visit_date (最後訪問日期), completed_at_tw (完成時間) 等時間戳記欄位。
+dim_dates 表提供了 calendar_date, session_year_type_tw (學年學期，例如 112上), is_holiday (是否假日) 等資訊。
+建議規則:
+當使用者提到「某段時間」、「特定日期」、「學期」、「假日」等時，應優先考慮使用 dim_dates 進行關聯或篩選。
+許多事實表 (fct tables) 都有 partition_date 欄位，這通常與記錄的產生日期相關，可以用於分區查詢和增量更新，Wren AI 在生成查詢時可以利用這個欄位來優化效能，特別是對於有 partition_by 設定的表。
+對於各種 _tw 結尾的時間戳記，明確其代表的是台灣時區 (Asia/Taipei)。
+",,true,20,2025-05-16T06:18:17.102Z,2025-05-16T06:18:17.103Z
+exported_instruction_3,"使用者維度 (User Dimension):
+dim_user_data 是核心的使用者資訊表，包含了 user_id, user_email, backend_user_id, user_role (使用者角色), user_city (使用者城市), user_school (使用者學校), user_grade_by_birthdate (依生日推算的年級), is_remedial_student (是否為學扶學生) 等重要資訊。
+user_id 是跨多個表格的主要關聯鍵。
+建議規則:
+當查詢涉及到「學生」、「老師」、「使用者」、「某個城市/學校的學生/老師」等概念時，應以 dim_user_data 為主要查詢或串接的表格。
+user_role 可以用來區分不同身份的使用者 (例如：學生、老師)。
+user_register_source, open_id_city, city_email, city_format 等欄位可以幫助識別使用者的註冊來源或所屬縣市平台。",,true,20,2025-05-16T06:18:46.378Z,2025-05-16T06:18:46.378Z
+exported_instruction_4,"學校維度 (School Dimension):
+dim_schools_metadata 包含了學校的詳細資訊，如 school_id_sha256, school_name, school_city, school_township, school_level_type (學校級別), school_institution_type (公私立), total_students_count (總學生數) 等。
+school_id_sha256 是學校的唯一識別碼。
+建議規則:
+當查詢涉及到「學校」、「某地區的學校」、「某類型的學校」或學校的統計數據 (如學生數、班級數) 時，應使用 dim_schools_metadata。",,true,20,2025-05-16T06:18:53.337Z,2025-05-16T06:18:53.337Z
+exported_instruction_5,"內容維度 (Content Dimension):
+fct_user_records_of_all_contents 及其衍生表格記錄了使用者與不同類型內容 (content_kind: Video, Exercise, Article, Exam) 的互動。
+content_id 是內容的識別碼。
+建議規則:
+當查詢涉及到「影片觀看」、「題目練習」、「文章閱讀」、「試卷作答」等行為時，應查詢 fct_user_records_of_all_contents 或其相關聚合表。
+content_kind 欄位用於區分不同的內容類型。
+is_mission_mode 欄位指示該次內容使用是否在「任務模式」下進行。",,true,20,2025-05-16T06:18:59.180Z,2025-05-16T06:18:59.180Z
+exported_instruction_6,"任務維度 (Mission Dimension):
+fct_user_records_of_missions_grained_to_missions 記錄了「任務」的相關資訊，包含 mission_id, assignee_id (被指派者), assigner_id (指派者), is_completed (是否完成) 等。
+建議規則:
+當查詢涉及到「任務指派」、「任務完成情況」、「老師指派的任務」等時，應使用 fct_user_records_of_missions_grained_to_missions。",,true,20,2025-05-16T06:19:04.282Z,2025-05-16T06:19:04.282Z
+exported_instruction_7,"師生關係 (Teacher-Student Relationship):
+dim_teacher_student_joins 記錄了老師、學生和班級之間的關係，包含 class_id, teacher_user_id, student_user_id, class_name。
+建議規則:
+當查詢需要連接老師和其對應的學生，或查詢某班級的師生名單時，應使用 dim_teacher_student_joins。",,true,20,2025-05-16T06:19:12.384Z,2025-05-16T06:19:12.384Z
+exported_instruction_8,"特定模型的規則建議:
+fct_user_records_of_all_contents_grained_to_date:
+建議規則: 若使用者想查詢「每日」或「某一天」的「整體內容使用情況」(例如：總使用人數、總使用內容數、總使用時長)，應優先使用此表，因為它已經預先聚合了每日數據。
+fct_teacher_level_score:
+描述中提到此表用於計算 Lv1 Teacher，且 112 學年度前的資料來自靜態表，113 學年度開始計算。
+建議規則: 當查詢「老師等級」、「核心使用者老師」相關問題時，可參考此表。需注意其資料計算方式與時間分界點。Wren AI 應了解 teacher_level_score 的定義 (0, 0.25, 0.5, 0.75, 1)。
+",,true,20,2025-05-16T06:19:19.134Z,2025-05-16T06:19:19.134Z
+exported_instruction_9,"通用欄位命名與意義:
+_id 或 _id_sha256 通常表示唯一識別碼。
+_tw 結尾的時間戳記表示台灣時區。
+is_ 開頭的欄位通常是布林值 (boolean)。
+count 或 cnt 結尾的欄位通常表示數量。
+total_ 開頭的欄位通常表示總計。
+seconds_taken 表示花費的秒數。
+points_earned 表示獲得的能量點數。",,true,20,2025-05-16T06:19:26.682Z,2025-05-16T06:19:26.682Z
+exported_instruction_10,"進階建議:
+ID 類型: 向 Wren AI 明確不同 _id 欄位的具體指涉對象，例如 user_id vs backend_user_id vs teacher_user_id vs student_user_id vs assignee_id vs assigner_id。雖然它們都可能最終關聯回 dim_user_data 的 user_id，但在不同的表中代表了不同的角色或脈絡下的使用者。
+隱含關係: 某些表格之間可能存在未直接透過 Foreign Key 宣告，但可透過業務邏輯推斷的關聯。例如，fct_user_records_of_all_contents 中的 user_id 可以與 dim_user_data 的 user_id 關聯，進而獲取使用者的詳細資訊。
+資料粒度 (Granularity): 強調每個表格的資料粒度，例如 dim_teacher_student_joins 是「班級 - 老師 - 學生」為一筆，而 fct_user_records_of_all_contents 則是「一次內容使用紀錄」為一筆。fct_user_records_of_missions_grained_to_missions 是「一個任務」為一筆。
+常用縮寫/術語: 如果你的團隊或 Wren AI 需要理解特定的業務術語 (例如：「學扶學生」、「模板任務」、「Lv1 老師」)，可以將這些術語及其定義作為全域知識的一部分。",,true,20,2025-05-16T06:19:55.887Z,2025-05-16T06:19:55.887Z
+exported_instruction_11,"使用者相關 (User Related):
+user_id: 使用者的唯一識別碼，通常是跨表格關聯使用者的主鍵。
+backend_user_id: 後端系統使用的使用者 ID，可能與 user_id 不同，有時可用於識別註冊來源 (例如 OpenID)。
+user_primary_key: 用於識別使用者的主要鍵，可能來自不同的登入方式。
+user_role: 使用者在平台上的角色，例如學生 (student)、老師 (teacher)、家長 (parent) 等。dim_user_data 中提到會優先使用 datastore 中使用者自行設定的身分。
+user_register_source: 使用者的註冊來源，例如透過 Google、Facebook、縣市 OpenID 等。
+is_remedial_student: 是否為學扶學生 (學習扶助計畫的學生)。這是一個重要的標籤，用於識別特定學生群體。
+city_email / city_format / open_id_city: 與縣市 OpenID 帳號相關的欄位，用於識別使用者是否透過特定縣市的教育平台帳號登入 (例如：宜蘭快樂e學院、新北親師生平台、臺南openid)。
+coaches: 指導該使用者的教練 (通常是老師或其他指導者) 的 user_id 列表。
+points: 使用者在平台上獲得的能量點數，通常透過完成學習活動 (如看影片、做練習) 來累積。",,true,20,2025-05-16T06:20:48.003Z,2025-05-16T07:10:52.955Z
+exported_instruction_12,"學校與班級相關 (School & Class Related):
+school_id_sha256: 學校的唯一識別碼 (經過 SHA256雜湊)。
+school_level_type: 學校的學制類型 (例如：國小、國中、高中職)。
+school_institution_type: 學校的機構類型 (例如：公立、私立)。
+school_location_type: 學校地區屬性 (例如：偏遠、特偏、極偏、非山非市)。
+class_id: 班級的唯一識別碼。
+class_code: 班級的邀請碼，學生可以透過此代碼加入班級。
+is_lecture: 標示該班級是否為「講座」性質的班級。
+dim_teacher_student_joins: 核心的師生關係表，每一行代表一個「班級 - 老師 - 學生」的關聯。也可能包含沒有學生的班級 (老師自己創建的班級)。",,true,20,2025-05-16T06:20:52.820Z,2025-05-16T06:20:52.820Z
+exported_instruction_13,"內容與學習活動相關 (Content & Learning Activity Related):
+content_id: 各種學習內容 (影片、練習、文章、試卷) 的唯一識別碼。
+content_kind: 學習內容的類型，主要有：
+Video: 影片
+Exercise: 知識點/練習題
+Article: 講義/文章
+Exam: 試卷 (包含自組卷)
+is_mission_mode: 指示該次學習活動是否在「任務模式」下進行。任務模式通常指由老師指派的學習內容。
+total_seconds_taken: 使用者在某個內容上花費的總時間 (秒)。
+points_earned: 使用者透過完成某個內容 (通常是影片或練習) 所獲得的能量點數。
+",,true,20,2025-05-16T06:20:57.168Z,2025-05-16T06:20:57.168Z
+exported_instruction_14,"任務相關 (Mission Related):
+mission_id: 任務的唯一識別碼。
+assignee_id: 任務的被指派者 (通常是學生) 的 user_id。
+assigner_id: 任務的指派者 (通常是老師) 的 user_id。
+is_template_mission: 是否為模板任務。模板任務是「教師自我指派」的任務，每次發生指派時可能會自動生成。
+parent_mission_id: 若任務由其他任務複製而來，則記錄原始任務的 ID。
+completion_condition: 任務的完成條件。
+total_tasks_cnt: 單一任務內包含的總任務內容 (task) 數量。 (注意：fct_user_records_of_missions_grained_to_missions 的描述中提到「任務(mission)與任務內容(task)不同。任務是一個完整的指派，可能包含多個指派的任務內容(task)」。)",,true,20,2025-05-16T06:21:01.903Z,2025-05-16T06:21:01.903Z
+exported_instruction_15,"時間與學期相關 (Time & Semester Related):
+calendar_date: 日曆日期。
+session_year_type_tw: 台灣學年學期制表示 (例如：112上、112下)。這是分析學期數據時非常重要的欄位。dim_dates 表的核心功能就是提供日期與學年學期的對應。
+is_holiday: 標示某日期是否為假日 (包含國定假日及寒暑假)。
+partition_date: 資料分割區的日期，通常用於增量載入和查詢優化。",,true,20,2025-05-16T06:21:06.568Z,2025-05-16T06:21:06.568Z
+exported_instruction_16,"教師評估相關 (Teacher Evaluation Related):
+teacher_level_score: 教師在某學期的活躍等級分數 (0, 0.25, 0.5, 0.75, 1)。用於識別核心活躍教師 (Lv1 Teacher)。
+Lv1 Teacher: 平台定義的核心活躍教師等級。fct_teacher_level_score 的主要目的就是計算這個指標。",,true,20,2025-05-16T06:21:10.847Z,2025-05-16T06:21:10.847Z
+exported_instruction_17,"可以優先使用 dim 表（較小），才使用 fact 表（較大）
+
+維度表 (dim_):
+用途: 描述資料的「背景」或「脈絡」，回答「誰 (who)」、「什麼 (what)」、「哪裡 (where)」、「何時 (when)」、「為何 (why)」等問題。
+特性:
+通常包含描述性的文字資訊 (例如：使用者名稱 username、學校名稱 school_name、內容種類 content_kind、日期 calendar_date）。
+相對於事實表，維度表的資料量通常較小。
+資料變動較不頻繁。
+包含用於篩選和分組的屬性。
+你的例子: dim_schools_metadata, dim_user_data, dim_dates, dim_teacher_student_joins。
+事實表 (fct_):
+用途: 記錄業務過程中的「衡量值」或「指標」(measures/facts)。
+特性:
+通常包含數值資料 (例如：使用秒數 total_seconds_taken、獲得點數 points_earned、數量 total_users) 以及指向維度表的外鍵 (foreign keys)。
+相對於維度表，事實表的資料量通常非常龐大，並且會快速增長。
+記錄的是事件或交易。
+你的例子: fct_user_records_of_missions_grained_to_missions, fct_user_records_of_all_contents, fct_teacher_level_score。",,true,20,2025-05-16T06:25:00.007Z,2025-05-16T06:25:00.007Z
+exported_instruction_19,"Wren AI，為了讓你更準確地理解與學期和假期相關的時間查詢，請了解台灣學制中寒暑假的典型順序和特性：
+1. 台灣的學年與學期 (Taiwanese Academic Year & Semesters):
+一個完整的「學年度」(例如 112學年度，在 dim_dates.session_year_type_tw 中可能表示為 ""112上"" 或 ""112下"" 的年份部分) 通常從每年的 8月 開始，到隔年的 7月 結束。
+每個學年度包含兩個學期：
+上學期 (First Semester - 在 dim_dates.session_year_type_tw 中通常表示為學年度數字加上 ""上"", 例如 ""112上"")：大約從 8月底/9月初 到隔年 1月中下旬。
+下學期 (Second Semester - 在 dim_dates.session_year_type_tw 中通常表示為學年度數字加上 ""下"", 例如 ""112下"")：大約從 2月中下旬 到 6月底/7月初。
+2. 寒暑假的順序與歸屬:
+暑假 (Summer Vacation):
+時間點: 在「下學期」結束之後 (大約 7月、8月)，也就是在整個學年度結束後，並且在「新的學年度的上學期」開始之前。
+歸屬於: 暑假是連接兩個學年度的橋樑。例如，""112學年度下學期"" (112下) 結束後的暑假，緊接著是 ""113學年度上學期"" (113上) 的開始。
+相對長度: 通常是主要的長假期，約 2 個月。
+寒假 (Winter Vacation):
+時間點: 在「上學期」結束之後 (大約 1月底、2月)，以及「同一個學年度的下學期」開始之前。
+歸屬於: 同一個學年度內。例如，""112學年度上學期"" (112上) 結束後的寒假，仍然是屬於 ""112學年度"" 的一部分，之後會接著 ""112學年度下學期"" (112下)。
+相對長度: 通常比暑假短，約 3 週到 1 個月。
+順序總結:
+一個典型的學年時間流會像這樣：
+... (舊學年度結束) -> 暑假 -> 新學年度上學期 -> 寒假 -> 新學年度下學期 -> 暑假 ...
+例如：
+... 111學年度下學期 -> 111學年度的暑假 (橫跨到新的日曆年) -> 112學年度上學期 -> 112學年度的寒假 -> 112學年度下學期 -> 112學年度的暑假",,true,20,2025-05-16T07:09:58.996Z,2025-05-16T07:09:58.996Z
+exported_instruction_20,在生成 SQL 時，必須在每一個 CTE (Common Table Expression) 前加上適當的註解，說明該 CTE 的用途和邏輯。註解格式應為：-- CTE: [名稱] - [用途說明]。這有助於提高 SQL 的可讀性和維護性。,,true,20,2025-06-19T22:44:15.015Z,2025-06-19T22:44:15.015Z
+exported_instruction_25,SQL 生成最佳實踐：1. 使用明確的 JOIN 語法而非隱式連接 2. 為複雜查詢添加適當的索引提示 3. 使用 LIMIT 來控制結果集大小 4. 避免使用 SELECT * 5. 對於大表查詢考慮分頁處理,,true,20,2025-06-19T22:45:16.039Z,2025-06-19T22:45:16.039Z
