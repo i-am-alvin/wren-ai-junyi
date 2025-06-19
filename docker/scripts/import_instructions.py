@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
 """
+⚠️ DEPRECATED - DO NOT USE ⚠️
+
+This script is DEPRECATED and should NOT be used.
+It directly writes to Qdrant which causes data inconsistency.
+
+PROBLEM:
+- Data written directly to Qdrant will NOT appear in the UI
+- UI and Qdrant will be out of sync
+- Cannot manage instructions through the web interface
+
+CORRECT METHOD:
+Use import_instructions_via_ui.py instead, which:
+- Uses the proper UI GraphQL API
+- Automatically syncs UI database and Qdrant
+- Allows management through web interface
+
 WrenAI Instructions CSV Importer (Docker Version)
 
 This script runs inside the WrenAI Docker environment and imports instructions from CSV to Qdrant.
@@ -20,6 +36,14 @@ import uuid
 import sys
 import os
 from typing import List, Dict, Any, Optional
+
+# ⚠️ DEPRECATED WARNING ⚠️
+print("=" * 80)
+print("⚠️  WARNING: THIS SCRIPT IS DEPRECATED AND SHOULD NOT BE USED!")
+print("⚠️  Use 'import_instructions_via_ui.py' instead for proper UI API import.")
+print("⚠️  Direct Qdrant writes will NOT appear in the UI interface!")
+print("=" * 80)
+input("Press Enter to continue anyway, or Ctrl+C to cancel...")
 
 # Add WrenAI service to path
 sys.path.insert(0, '/')
@@ -126,15 +150,43 @@ class WrenAIInstructionsImporter:
                 logger.info("⏳ Processing instructions...")
                 result = await self.instructions_service.index(request)
                 
-                if result.status == "finished":
-                    stats["success"] = len(instructions_to_import)
-                    logger.info(f"🎉 Successfully imported all {stats['success']} instructions!")
+                # Handle result based on its structure
+                if isinstance(result, dict) and 'resource' in result:
+                    # Extract the resource (Event object)
+                    resource = result['resource']
+                    if hasattr(resource, 'status') and resource.status == 'finished':
+                        stats["success"] = len(instructions_to_import)
+                        logger.info(f"🎉 Successfully imported all {stats['success']} instructions!")
+                        logger.info(f"   Event ID: {resource.event_id}")
+                        logger.info(f"   Trace ID: {resource.trace_id}")
+                    else:
+                        stats["failed"] = len(instructions_to_import)
+                        error_msg = resource.error.message if hasattr(resource, 'error') and resource.error else "Unknown error"
+                        logger.error(f"💥 Import failed: {error_msg}")
+                        if hasattr(resource, 'trace_id') and resource.trace_id:
+                            logger.error(f"   Trace ID: {resource.trace_id}")
+                elif isinstance(result, dict):
+                    # If result is a dict, check for success indicators
+                    if result.get("status") == "finished" or "success" in str(result).lower():
+                        stats["success"] = len(instructions_to_import)
+                        logger.info(f"🎉 Successfully imported all {stats['success']} instructions!")
+                    else:
+                        stats["failed"] = len(instructions_to_import)
+                        error_msg = result.get("error", {}).get("message", "Unknown error") if result.get("error") else str(result)
+                        logger.error(f"💥 Import failed: {error_msg}")
+                        if result.get("trace_id"):
+                            logger.error(f"   Trace ID: {result.get('trace_id')}")
                 else:
-                    stats["failed"] = len(instructions_to_import)
-                    error_msg = result.error.message if result.error else "Unknown error"
-                    logger.error(f"💥 Import failed: {error_msg}")
-                    if result.trace_id:
-                        logger.error(f"   Trace ID: {result.trace_id}")
+                    # If result is an object, use attribute access
+                    if hasattr(result, 'status') and result.status == "finished":
+                        stats["success"] = len(instructions_to_import)
+                        logger.info(f"🎉 Successfully imported all {stats['success']} instructions!")
+                    else:
+                        stats["failed"] = len(instructions_to_import)
+                        error_msg = result.error.message if hasattr(result, 'error') and result.error else "Unknown error"
+                        logger.error(f"💥 Import failed: {error_msg}")
+                        if hasattr(result, 'trace_id') and result.trace_id:
+                            logger.error(f"   Trace ID: {result.trace_id}")
             else:
                 logger.warning("⚠️  No valid instructions to import")
             

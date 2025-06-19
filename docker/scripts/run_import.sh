@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-CONTAINER_NAME="wrenai-wren-ai-service-1"
+CONTAINER_NAME="f493f3070566_wrenai-wren-ai-service-1"
 PROJECT_ID="20"
 CSV_FILE="instructions.csv"
 SCRIPT_FILE="import_instructions.py"

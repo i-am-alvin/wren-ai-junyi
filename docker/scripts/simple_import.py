@@ -1,8 +1,28 @@
 #!/usr/bin/env python3
 """
-Simple WrenAI Instructions CSV Importer
+⚠️ DEPRECATED - DO NOT USE ⚠️
 
-This script directly imports instructions to Qdrant using minimal WrenAI infrastructure.
+This script is DEPRECATED and should NOT be used.
+It directly writes to Qdrant which causes data inconsistency.
+
+PROBLEM:
+- Data written directly to Qdrant will NOT appear in the UI
+- UI and Qdrant will be out of sync
+- Cannot manage instructions through the web interface
+
+CORRECT METHOD:
+Use import_instructions_via_ui.py instead, which:
+- Uses the proper UI GraphQL API
+- Automatically syncs UI database and Qdrant
+- Allows management through web interface
+
+Simple Instructions Importer for WrenAI
+
+This script provides a simplified way to import instructions directly to Qdrant.
+It bypasses the full WrenAI service stack for faster testing and development.
+
+WARNING: This approach writes directly to Qdrant and may not sync with UI database.
+For production use, consider using the full WrenAI service API.
 """
 
 import argparse
@@ -13,6 +33,7 @@ import uuid
 import sys
 import os
 from typing import List, Dict, Any, Optional
+import requests
 
 # Add WrenAI service to path
 sys.path.insert(0, '/')
@@ -32,6 +53,14 @@ except ImportError as e:
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# ⚠️ DEPRECATED WARNING ⚠️
+print("=" * 80)
+print("⚠️  WARNING: THIS SCRIPT IS DEPRECATED AND SHOULD NOT BE USED!")
+print("⚠️  Use 'import_instructions_via_ui.py' instead for proper UI API import.")
+print("⚠️  Direct Qdrant writes will NOT appear in the UI interface!")
+print("=" * 80)
+input("Press Enter to continue anyway, or Ctrl+C to cancel...")
 
 class SimpleInstructionsImporter:
     def __init__(self):
