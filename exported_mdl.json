@@ -1,0 +1,1730 @@
+{
+  "schema": "public",
+  "catalog": "wrenai",
+  "dataSource": "BIGQUERY",
+  "models": [
+    {
+      "name": "dim_schools_metadata",
+      "columns": [
+        {
+          "name": "address",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校地址",
+            "displayName": "address"
+          }
+        },
+        {
+          "name": "branch_name",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "分校分班名稱",
+            "displayName": "branch_name"
+          }
+        },
+        {
+          "name": "delayed_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "延修女學生數",
+            "displayName": "delayed_female_students_count"
+          }
+        },
+        {
+          "name": "delayed_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "延修男學生數",
+            "displayName": "delayed_male_students_count"
+          }
+        },
+        {
+          "name": "english_school_name",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校英文名稱。只有國際學校有此欄位。",
+            "displayName": "english_school_name"
+          }
+        },
+        {
+          "name": "female_fulltime_teachers_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "女專任教師數",
+            "displayName": "female_fulltime_teachers_count"
+          }
+        },
+        {
+          "name": "female_parttime_teachers_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "女兼任教師數",
+            "displayName": "female_parttime_teachers_count"
+          }
+        },
+        {
+          "name": "female_staff_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "女職員數",
+            "displayName": "female_staff_count"
+          }
+        },
+        {
+          "name": "grade_1_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "一年級班級數",
+            "displayName": "grade_1_classes_count"
+          }
+        },
+        {
+          "name": "grade_1_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "一年級女學生數",
+            "displayName": "grade_1_female_students_count"
+          }
+        },
+        {
+          "name": "grade_1_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "一年級男學生數",
+            "displayName": "grade_1_male_students_count"
+          }
+        },
+        {
+          "name": "grade_2_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "二年級班級數",
+            "displayName": "grade_2_classes_count"
+          }
+        },
+        {
+          "name": "grade_2_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "二年級女學生數",
+            "displayName": "grade_2_female_students_count"
+          }
+        },
+        {
+          "name": "grade_2_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "二年級男學生數",
+            "displayName": "grade_2_male_students_count"
+          }
+        },
+        {
+          "name": "grade_3_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "三年級班級數",
+            "displayName": "grade_3_classes_count"
+          }
+        },
+        {
+          "name": "grade_3_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "三年級女學生數",
+            "displayName": "grade_3_female_students_count"
+          }
+        },
+        {
+          "name": "grade_3_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "三年級男學生數",
+            "displayName": "grade_3_male_students_count"
+          }
+        },
+        {
+          "name": "grade_4_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "四年級班級數",
+            "displayName": "grade_4_classes_count"
+          }
+        },
+        {
+          "name": "grade_4_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "四年級女學生數",
+            "displayName": "grade_4_female_students_count"
+          }
+        },
+        {
+          "name": "grade_4_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "四年級男學生數",
+            "displayName": "grade_4_male_students_count"
+          }
+        },
+        {
+          "name": "grade_5_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "五年級班級數",
+            "displayName": "grade_5_classes_count"
+          }
+        },
+        {
+          "name": "grade_5_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "五年級女學生數",
+            "displayName": "grade_5_female_students_count"
+          }
+        },
+        {
+          "name": "grade_5_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "五年級男學生數",
+            "displayName": "grade_5_male_students_count"
+          }
+        },
+        {
+          "name": "grade_6_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "六年級班級數",
+            "displayName": "grade_6_classes_count"
+          }
+        },
+        {
+          "name": "grade_6_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "六年級女學生數",
+            "displayName": "grade_6_female_students_count"
+          }
+        },
+        {
+          "name": "grade_6_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "六年級男學生數",
+            "displayName": "grade_6_male_students_count"
+          }
+        },
+        {
+          "name": "grade_7_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "七年級女學生數",
+            "displayName": "grade_7_female_students_count"
+          }
+        },
+        {
+          "name": "grade_7_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "七年級男學生數",
+            "displayName": "grade_7_male_students_count"
+          }
+        },
+        {
+          "name": "indigenous_students_ratio",
+          "type": "FLOAT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "原住民學生比率",
+            "displayName": "indigenous_students_ratio"
+          }
+        },
+        {
+          "name": "is_branch_school",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為分校",
+            "displayName": "is_branch_school"
+          }
+        },
+        {
+          "name": "last_year_female_graduates_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "去年女畢業生數。由於一間學校可能有多筆資料，故後續再計算這個欄位的正確數值時會除以2，避免重複計算。",
+            "displayName": "last_year_female_graduates_count"
+          }
+        },
+        {
+          "name": "last_year_male_graduates_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "去年男畢業生數。由於一間學校可能有多筆資料，故後續再計算這個欄位的正確數值時會除以2，避免重複計算。",
+            "displayName": "last_year_male_graduates_count"
+          }
+        },
+        {
+          "name": "male_fulltime_teachers_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "男專任教師數",
+            "displayName": "male_fulltime_teachers_count"
+          }
+        },
+        {
+          "name": "male_parttime_teachers_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "男兼任教師數",
+            "displayName": "male_parttime_teachers_count"
+          }
+        },
+        {
+          "name": "male_staff_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "男職員數",
+            "displayName": "male_staff_count"
+          }
+        },
+        {
+          "name": "phone",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校電話",
+            "displayName": "phone"
+          }
+        },
+        {
+          "name": "record_from",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "資訊的表來源，包含 basic、detailed、faraway、unlisted、urban_rural_fringe、experimental 等六個來源。",
+            "displayName": "record_from"
+          }
+        },
+        {
+          "name": "school_city",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "縣市名稱",
+            "displayName": "school_city"
+          }
+        },
+        {
+          "name": "school_country",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "國家名稱",
+            "displayName": "school_country"
+          }
+        },
+        {
+          "name": "school_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "統計處提供的學校代碼。若為同一學校、不同分部時，會共享同一代碼，因此，非為 unique id。",
+            "displayName": "school_id"
+          }
+        },
+        {
+          "name": "school_id_sha256",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "displayName": "school_id_sha256"
+          }
+        },
+        {
+          "name": "school_institution_type",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校設立類型，包含：公立、私立",
+            "displayName": "school_institution_type"
+          }
+        },
+        {
+          "name": "school_level_type",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校種類，包含：elementary、junior_high、senior_and_technical、university、international",
+            "displayName": "school_level_type"
+          }
+        },
+        {
+          "name": "school_location_type",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校地區屬性，包含：偏遠、特篇、極偏、非山非市。",
+            "displayName": "school_location_type"
+          }
+        },
+        {
+          "name": "school_name",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校名稱",
+            "displayName": "school_name"
+          }
+        },
+        {
+          "name": "school_township",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "鄉鎮市區名稱",
+            "displayName": "school_township"
+          }
+        },
+        {
+          "name": "total_classes_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總班級數",
+            "displayName": "total_classes_count"
+          }
+        },
+        {
+          "name": "total_female_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總女學生數",
+            "displayName": "total_female_students_count"
+          }
+        },
+        {
+          "name": "total_male_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總男學生數",
+            "displayName": "total_male_students_count"
+          }
+        },
+        {
+          "name": "total_students_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總學生數",
+            "displayName": "total_students_count"
+          }
+        },
+        {
+          "name": "total_teachers_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總教師數",
+            "displayName": "total_teachers_count"
+          }
+        },
+        {
+          "name": "website",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學校網址",
+            "displayName": "website"
+          }
+        },
+        {
+          "name": "dim_user_data",
+          "type": "dim_user_data",
+          "properties": {},
+          "relationship": "Dim_schools_metadataSchool_id_sha256Dim_user_dataUser_school_id_sha256",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "dim_schools_metadata"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "dim_schools_metadata",
+        "description": "\"所有學校之基本資訊及人數統計，每一行為某學年度之某學校的紀錄。\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "fct_user_records_of_missions_grained_to_missions",
+      "columns": [
+        {
+          "name": "assignee_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "被指派任務對象（均一班級內學生）的 user_data_key，對應 user_id",
+            "displayName": "assignee_id"
+          }
+        },
+        {
+          "name": "assigner_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "指派任務對象（均一班級內教師）的 user_data_key，對應 user_id",
+            "displayName": "assigner_id"
+          }
+        },
+        {
+          "name": "class_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級的唯一辨識碼",
+            "displayName": "class_id"
+          }
+        },
+        {
+          "name": "completed_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務完成的時間戳記。若任務未完成，則為 null。",
+            "displayName": "completed_at_tw"
+          }
+        },
+        {
+          "name": "completion_condition",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務指派時，設定的完成的條件：\n影片 Video：再看一次\n- one_more\n知識點 Exercise：精熟機制 / 六題對五題\n- count: 習題數量\n- type: \n    - level1\n    - level2\n    - level3\n    - proficient\n    - total_correct\n講義 Article：再看一次\n- count: 講題題目數量\n- type: \n    - total_correct\n評量卷 Exam：再做一次\n- one_more\n自組卷 Custom Exam：\n- null\n學扶卷 Import Exam\n- completed_when_import",
+            "displayName": "completion_condition"
+          }
+        },
+        {
+          "name": "created_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務被創建的時間戳記。請留意，創建於指派的時間是不同的。創建後，可以選擇自定義的時間指派任務。",
+            "displayName": "created_at_tw"
+          }
+        },
+        {
+          "name": "due_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務的截止時間。若無特別設定，軟體預設的時間為 9999-12-31 23:59:59。",
+            "displayName": "due_at_tw"
+          }
+        },
+        {
+          "name": "exam_completed_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "考卷完成數量。若任務內無考卷，則為 0。",
+            "displayName": "exam_completed_count"
+          }
+        },
+        {
+          "name": "exercise_completed_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "知識點完成數量。若任務內無知識點，則為 0。",
+            "displayName": "exercise_completed_count"
+          }
+        },
+        {
+          "name": "is_completed",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務是否完成。",
+            "displayName": "is_completed"
+          }
+        },
+        {
+          "name": "is_template_mission",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為模板任務。模板任務是「教師自我指派」的任務。每次發生指派時，都會自動生成。",
+            "displayName": "is_template_mission"
+          }
+        },
+        {
+          "name": "materials",
+          "type": "ARRAY<STRING>",
+          "isCalculated": false,
+          "notNull": true,
+          "properties": {
+            "description": "任務附帶的材料，是白名單所允許的 url 連結，提供給學生參考。",
+            "displayName": "materials"
+          }
+        },
+        {
+          "name": "mission_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "每個任務的唯一辨識符。\n- 同一班級內，同一組任務會共享同一 ID。",
+            "displayName": "mission_id"
+          }
+        },
+        {
+          "name": "notes",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務的備註，由教師自定義。指派後不可更改。",
+            "displayName": "notes"
+          }
+        },
+        {
+          "name": "parent_mission_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "若任務由其他任務複製而來，則會有 parent_mission_id。若無，則為 null。目前由 ga 紀錄複製任務的行為。只包含從外部複製，不包含自我複製。",
+            "displayName": "parent_mission_id"
+          }
+        },
+        {
+          "name": "partition_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "用來作分割的日期欄位，用此欄位進行過濾將降低查詢用量\n由於 bigquery 對於分割單位操作有 4000 單位的上限，故將超過 10 年以前的資料則是以年為分割單位",
+            "displayName": "partition_date"
+          }
+        },
+        {
+          "name": "schedule_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務的排程指派時間。若無特別設定排程，則為 null",
+            "displayName": "schedule_at_tw"
+          }
+        },
+        {
+          "name": "title",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "任務本身的名稱，由教師自定義。指派後不可更改。",
+            "displayName": "title"
+          }
+        },
+        {
+          "name": "total_tasks_cnt",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "單一任務內的總任務內容數量。",
+            "displayName": "total_tasks_cnt"
+          }
+        },
+        {
+          "name": "updated_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "在指派任務後，有任何更新的時間戳記。例如，任務的完成狀態人數，等等。",
+            "displayName": "updated_at_tw"
+          }
+        },
+        {
+          "name": "video_completed_count",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "影片完成數量。若任務內無影片，則為 0。",
+            "displayName": "video_completed_count"
+          }
+        },
+        {
+          "name": "dim_user_data",
+          "type": "dim_user_data",
+          "properties": {},
+          "relationship": "Fct_user_records_of_missions_grained_to_missionsAssignee_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "fct_user_records_of_missions_grained_to_missions"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "fct_user_records_of_missions_grained_to_missions",
+        "description": "\"任務（mission）與任務內容（task）不同。任務是一個完整的指派，可能包含多個指派的任務內容（task）。 這張表每一筆資料，是一組任務。 這張表的紀錄是以任務為單位，紀錄了任務的相關資訊，包括任務的標題、指派者、指派對象、任務內容、截止時間、是否完成等。\\n\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "dim_user_data",
+      "columns": [
+        {
+          "name": "backend_user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "後端系統中用於辨識使用者的代碼，關聯到後端資料庫的 \"user_id\"",
+            "displayName": "backend_user_id"
+          }
+        },
+        {
+          "name": "backup_emails",
+          "type": "ARRAY<STRING>",
+          "isCalculated": false,
+          "notNull": true,
+          "properties": {
+            "description": "紀錄使用者在平台中的已綁定信箱、教育雲帳號、Facebook 帳號，最常用於縣市的 openid 對應，像是新北、宜蘭、臺南的學扶均用此欄位",
+            "displayName": "backup_emails"
+          }
+        },
+        {
+          "name": "badges",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者獲得的所有徽章，為以空格隔開的字串，若沒有獲得徽章則為空字串",
+            "displayName": "badges"
+          }
+        },
+        {
+          "name": "birthdate",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者自行設定的生日",
+            "displayName": "birthdate"
+          }
+        },
+        {
+          "name": "city_email",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的縣市帳號，依照縣市來源可辨識為何縣市的帳號，由於跨縣市轉學等情況稀少，不特別處理多重縣市帳號的問題，各縣市 pattern:\n宜蘭快樂e學院： id + @smail.ilc.edu.tw 為學生，id + @ilc.edu.tw / @tmail.ilc.edu.tw / ilc@smail.ilc.edu.tw 為老師\n新北親師生平台：id + @ + 英文字母. +ntpc.edu.tw 或是 id + @ntpc.edu.tw，沒有區分師生\n臺南openid： https://openid.tn.edu.tw/op/user.aspx/ + id，或是 id + @cloud.tn.edu.tw，若 id 有 St 開頭則為學生\n",
+            "displayName": "city_email"
+          }
+        },
+        {
+          "name": "city_format",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的縣市來源，目前包含 \"宜蘭快樂e學院\", \"新北親師生平台\", \"臺南openid\"",
+            "displayName": "city_format"
+          }
+        },
+        {
+          "name": "coaches",
+          "type": "ARRAY<STRING>",
+          "isCalculated": false,
+          "notNull": true,
+          "properties": {
+            "description": "使用者加入的所有班級的老師，為 repeated 欄位，需要以 unnest 取用，若退出老師的班級，也會將該班老師從此欄位中移除",
+            "displayName": "coaches"
+          }
+        },
+        {
+          "name": "contact_email",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者自己填入的連絡信箱，系統並未驗證過是否為可收件信箱地址",
+            "displayName": "contact_email"
+          }
+        },
+        {
+          "name": "first_visit_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者初次訪問平台的日期，從平台紀錄、GA 紀錄等紀錄中獲取最早的訪問日期",
+            "displayName": "first_visit_date"
+          }
+        },
+        {
+          "name": "gender",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的性別，包含 male, female, unspecified, null，以及一筆為 yeet 的資料",
+            "displayName": "gender"
+          }
+        },
+        {
+          "name": "inferred_emails",
+          "type": "ARRAY<STRING>",
+          "isCalculated": false,
+          "notNull": true,
+          "properties": {
+            "description": "推測使用者的信箱，會將 user_email、backend_user_id、user_primary_key、contact_email、city_email 以及 backup_emails 中的信箱進行合併，使用 get_email macro 工具取得符合格式的信箱，若無法推測則為空字串",
+            "displayName": "inferred_emails"
+          }
+        },
+        {
+          "name": "is_developer",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者是否為開發者，均一內部工程師申請之權限",
+            "displayName": "is_developer"
+          }
+        },
+        {
+          "name": "is_lecturer",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者是否為研習講師，需在均一後台用 user_email 設定",
+            "displayName": "is_lecturer"
+          }
+        },
+        {
+          "name": "is_moderator",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者是否為管理者，均一內部一般夥伴申請之權限",
+            "displayName": "is_moderator"
+          }
+        },
+        {
+          "name": "is_open_id_by_backend_user_id",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "用 backend_user_id 的 pattern 判斷使用者的縣市",
+            "displayName": "is_open_id_by_backend_user_id"
+          }
+        },
+        {
+          "name": "is_open_id_by_email_domain",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否能從使用者帳號中判斷來自哪個縣市，以 open_id_city 是否為空來判斷",
+            "displayName": "is_open_id_by_email_domain"
+          }
+        },
+        {
+          "name": "is_registered",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者是否有註冊帳號，用 user_email 是否包含 nouser_id 字串判斷",
+            "displayName": "is_registered"
+          }
+        },
+        {
+          "name": "is_remedial_student",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為學扶學生，透過學扶匯入資訊而得",
+            "displayName": "is_remedial_student"
+          }
+        },
+        {
+          "name": "joined_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者於平台註冊的時間",
+            "displayName": "joined_at_tw"
+          }
+        },
+        {
+          "name": "last_visit_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者最後訪問平台的日期，從平台紀錄、GA 紀錄等紀錄中獲取最後的訪問日期",
+            "displayName": "last_visit_date"
+          }
+        },
+        {
+          "name": "open_id_city",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "用 user_primary_key 及 backup_emails 的 pattern 判斷使用者的縣市",
+            "displayName": "open_id_city"
+          }
+        },
+        {
+          "name": "points",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者擁有的能量點數，看影片及練習習題均會增加能量點數",
+            "displayName": "points"
+          }
+        },
+        {
+          "name": "sha256_user_primary_key",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "ga4 資料中使用者的唯一辨識碼，可以用 to_hex(sha256(user.email)) 轉換為 user_primary_key",
+            "displayName": "sha256_user_primary_key"
+          }
+        },
+        {
+          "name": "user_city",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者所在的縣市，主要以使用者所在的學校來判斷",
+            "displayName": "user_city"
+          }
+        },
+        {
+          "name": "user_email",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者在平台上的\"均一通行碼\"，關聯到後端資料庫的 \"user_email\"，需注意不一定是信箱的格式，常用來提供給業務單位使用",
+            "displayName": "user_email"
+          }
+        },
+        {
+          "name": "user_grade_by_birthdate",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的年級資訊，從生日推算而得",
+            "displayName": "user_grade_by_birthdate"
+          }
+        },
+        {
+          "name": "user_grade_by_content_use",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "displayName": "user_grade_by_content_use"
+          }
+        },
+        {
+          "name": "user_grade_by_user_fill_in",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "displayName": "user_grade_by_user_fill_in"
+          }
+        },
+        {
+          "name": "user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的唯一辨識碼，代碼會包含前綴 \"user_id_key\"，關聯到後端資料庫中使用者實體的 \"key.name\"",
+            "displayName": "user_id"
+          }
+        },
+        {
+          "name": "user_nickname",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者可以自行設定的暱稱",
+            "displayName": "user_nickname"
+          }
+        },
+        {
+          "name": "user_primary_key",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的辨識碼，過去常用作使用者的唯一辨識碼，像是 ga 資料中需要此欄位，現已不做此使用，統一轉換為 user_id",
+            "displayName": "user_primary_key"
+          }
+        },
+        {
+          "name": "user_register_source",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "| source        | 在哪裡註冊          |\n| ------------- | ------------------- |\n| googleid      | google              |\n| facebookid    | facebook            |\n| email         | email               |\n| 1campusid     | 親師生平台(ischool) |\n| jasmineid     | 班級匯入(ischool)   |\n| nouserid      | 訪客紀錄            |\n| child_account | 附屬帳號            |\n| eduopenid     | 教育雲/openid       |\n| other         | 其他無法辨識的來源  |\n| importid      | 已淘汰(舊版 OpenID) |\n| openid        | 已淘汰(舊版 OpenID) |",
+            "displayName": "user_register_source"
+          }
+        },
+        {
+          "name": "user_role",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "套用 datastore 中使用者自行設定的身分，若為空，則可能補上使用者透過 openid 登入 API 所獲取的身分資訊",
+            "displayName": "user_role"
+          }
+        },
+        {
+          "name": "user_school",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者所在的學校",
+            "displayName": "user_school"
+          }
+        },
+        {
+          "name": "user_school_id_sha256",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "displayName": "user_school_id_sha256"
+          }
+        },
+        {
+          "name": "user_school_level_type",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者所在學校的類型，分為國小、國中、高中職、大學等",
+            "displayName": "user_school_level_type"
+          }
+        },
+        {
+          "name": "username",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者可以自行設定的登入帳號",
+            "displayName": "username"
+          }
+        },
+        {
+          "name": "dim_schools_metadata",
+          "type": "dim_schools_metadata",
+          "properties": {},
+          "relationship": "Dim_schools_metadataSchool_id_sha256Dim_user_dataUser_school_id_sha256",
+          "isCalculated": false,
+          "notNull": false
+        },
+        {
+          "name": "dim_teacher_student_joins",
+          "type": "dim_teacher_student_joins",
+          "properties": {},
+          "relationship": "Dim_teacher_student_joinsTeacher_user_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        },
+        {
+          "name": "fct_teacher_level_score",
+          "type": "fct_teacher_level_score",
+          "properties": {},
+          "relationship": "Fct_teacher_level_scoreTeacher_user_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        },
+        {
+          "name": "fct_user_records_of_missions_grained_to_missions",
+          "type": "fct_user_records_of_missions_grained_to_missions",
+          "properties": {},
+          "relationship": "Fct_user_records_of_missions_grained_to_missionsAssignee_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        },
+        {
+          "name": "fct_user_records_of_all_contents",
+          "type": "fct_user_records_of_all_contents",
+          "properties": {},
+          "relationship": "Fct_user_records_of_all_contentsUser_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "dim_user_data"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "dim_user_data",
+        "description": "\"使用者的資訊彙整大表\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "dim_dates",
+      "columns": [
+        {
+          "name": "calendar_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "行事曆的日期",
+            "displayName": "calendar_date"
+          }
+        },
+        {
+          "name": "is_holiday",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為國定假日（TRUE:放假日;FALSE:上課日）",
+            "displayName": "is_holiday"
+          }
+        },
+        {
+          "name": "session_year_type_tw",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "台灣的學期狀態（民國學年度 + 學期狀態（上、寒假、下、暑假）），寒暑假在 seeds 中每年需要手動更新，暑假為新的學年度，例如：112/7 為 \"112暑假\"",
+            "displayName": "session_year_type_tw"
+          }
+        },
+        {
+          "name": "fct_user_records_of_all_contents_grained_to_date",
+          "type": "fct_user_records_of_all_contents_grained_to_date",
+          "properties": {},
+          "relationship": "Dim_datesCalendar_dateFct_user_records_of_all_contents_grained_to_dateCreated_date",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "dim_dates"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "dim_dates",
+        "description": "\"記錄台灣各學期狀態與日期的對應表，從 2012-10-12 開始，需要每年更新寒暑假日期於 seeds/vacations.csv\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "dim_teacher_student_joins",
+      "columns": [
+        {
+          "name": "class_code",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級代碼，若刪除班級時則會變為空值，不宜當作班級唯一辨識碼",
+            "displayName": "class_code"
+          }
+        },
+        {
+          "name": "class_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級的唯一辨識碼",
+            "displayName": "class_id"
+          }
+        },
+        {
+          "name": "class_name",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級顯示名稱，使用者可隨時編輯",
+            "displayName": "class_name"
+          }
+        },
+        {
+          "name": "created_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級的建立時間，過去是每次跑 pipeline 時進行 snapshot，故壓的時間為 pipeline 跑的時間，而非班級實際建立時間",
+            "displayName": "created_at_tw"
+          }
+        },
+        {
+          "name": "is_auto_assign_mission",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "未產品化的功能，在均一後台可透過 \"自動指派班級設定\" 將特定班級設定會自動指派任務，該班級所有任務都會自動指派給新加入班級的學生，通常用於官方活動班級或是研習班級等",
+            "displayName": "is_auto_assign_mission"
+          }
+        },
+        {
+          "name": "is_lecture",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為研習班級，均一後台可以設定研習講師，研習講師在建立新班級時，可以勾選是否建立為研習班級，方便後續追蹤管理",
+            "displayName": "is_lecture"
+          }
+        },
+        {
+          "name": "student_nickname",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學生的暱稱，在同老師的不同班級中，該學生暱稱均相同",
+            "displayName": "student_nickname"
+          }
+        },
+        {
+          "name": "student_user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學生的唯一辨識碼，代碼會包含前綴 \"user_id_key\"，關聯到後端資料庫中使用者實體的 \"key.name\"",
+            "displayName": "student_user_id"
+          }
+        },
+        {
+          "name": "teacher_user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "老師的唯一辨識碼，代碼會包含前綴 \"user_id_key\"，關聯到後端資料庫中使用者實體的 \"key.name\"",
+            "displayName": "teacher_user_id"
+          }
+        },
+        {
+          "name": "updated_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "班級的最後更新時間，過去是每次跑 pipeline 時進行 snapshot，故壓的時間為 pipeline 跑的時間，而非班級實際更新時間",
+            "displayName": "updated_at_tw"
+          }
+        },
+        {
+          "name": "dim_user_data",
+          "type": "dim_user_data",
+          "properties": {},
+          "relationship": "Dim_teacher_student_joinsTeacher_user_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "dim_teacher_student_joins"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "dim_teacher_student_joins",
+        "description": "\"師生關係紀錄，資料顆粒度 班級 - 老師 - 學生 為一筆資料，也保留沒有學生的班級紀錄(student_user_id 為空值)\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "fct_user_records_of_all_contents_grained_to_date",
+      "columns": [
+        {
+          "name": "content_kind",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "內容類型，'Video' = 影片, 'Exercise' = 知識點, 'Article' = 講義, 'Exam' = 試卷與自組卷",
+            "displayName": "content_kind"
+          }
+        },
+        {
+          "name": "created_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用的日期",
+            "displayName": "created_date"
+          }
+        },
+        {
+          "name": "is_mission_mode",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為任務模式中所進行的行為。2022/9/1 前跟 mission 表對應，2022/9/1 後與 streaming 資料表對應（更新頻率較快），取得有對應到任務的紀錄",
+            "displayName": "is_mission_mode"
+          }
+        },
+        {
+          "name": "partition_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "用來作分割的日期欄位，用此欄位進行過濾將降低查詢用量\n由於 bigquery 對於分割單位操作有 4000 單位的上限，故將超過 10 年以前的資料則是以年為分割單位",
+            "displayName": "partition_date"
+          }
+        },
+        {
+          "name": "total_contents",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當日使用的不重複內容總數",
+            "displayName": "total_contents"
+          }
+        },
+        {
+          "name": "total_points_earned",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當日使用所獲得的總能量點數(Video, Exercise 才有可能為正值)",
+            "displayName": "total_points_earned"
+          }
+        },
+        {
+          "name": "total_seconds_taken",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當日使用的總時間（秒）",
+            "displayName": "total_seconds_taken"
+          }
+        },
+        {
+          "name": "total_usage",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當日使用的紀錄總次數（人次）",
+            "displayName": "total_usage"
+          }
+        },
+        {
+          "name": "total_users",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當日使用的不重複總人數",
+            "displayName": "total_users"
+          }
+        },
+        {
+          "name": "dim_dates",
+          "type": "dim_dates",
+          "properties": {},
+          "relationship": "Dim_datesCalendar_dateFct_user_records_of_all_contents_grained_to_dateCreated_date",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "fct_user_records_of_all_contents_grained_to_date"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "fct_user_records_of_all_contents_grained_to_date",
+        "description": "\"以日期為單位，記錄在不同內容類型與任務狀態下的使用量統計。\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "fct_teacher_level_score",
+      "columns": [
+        {
+          "name": "session_year_type_tw",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "台灣的學期狀態（民國學年度 + 學期狀態（上、寒假、下、暑假）），寒暑假在 seeds 中每年需要手動更新，暑假為新的學年度，例如：112/7 為 \"112暑假\"",
+            "displayName": "session_year_type_tw"
+          }
+        },
+        {
+          "name": "teacher_level_score",
+          "type": "FLOAT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "當學期中老師的最大等級",
+            "displayName": "teacher_level_score"
+          }
+        },
+        {
+          "name": "teacher_user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "老師的唯一辨識碼，代碼會包含前綴 \"user_id_key\"，關聯到後端資料庫中使用者實體的 \"key.name\"",
+            "displayName": "teacher_user_id"
+          }
+        },
+        {
+          "name": "total_weeks_in_semester",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "學期間總共週數",
+            "displayName": "total_weeks_in_semester"
+          }
+        },
+        {
+          "name": "dim_user_data",
+          "type": "dim_user_data",
+          "properties": {},
+          "relationship": "Fct_teacher_level_scoreTeacher_user_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "fct_teacher_level_score"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "fct_teacher_level_score",
+        "description": "\"本表只用於計算 lv1 老師，在 112 學年度以前均使用過去計算的結果，本表從 113 學年度開始計算。 lv1 的定義為找出均一平台進行教學的核心使用者，總共分為五個等級：lv0, lv 0.25, lv 0.5, lv 0.75, lv 1。 （詳細指標說明請見：https://www.notion.so/junyiacademy/Lv1-Teacher-c06e71df45fe43879ace9115563afcc6） 此表為計算出各學期中老師的最大等級（包含 lv1 的老師），每一個老師在每個學期中只會有一個分數。\\n\""
+      },
+      "primaryKey": ""
+    },
+    {
+      "name": "fct_user_records_of_all_contents",
+      "columns": [
+        {
+          "name": "content_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "辨識各內容的唯一識別碼，'Video, Exercise' = content_id, 'Article' = article_id, 'Exam' = exam_id",
+            "displayName": "content_id"
+          }
+        },
+        {
+          "name": "content_kind",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "內容類型，'Video' = 影片, 'Exercise' = 知識點, 'Article' = 講義, 'Exam' = 試卷與自組卷",
+            "displayName": "content_kind"
+          }
+        },
+        {
+          "name": "created_at_tw",
+          "type": "TIMESTAMP",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用的時間",
+            "displayName": "created_at_tw"
+          }
+        },
+        {
+          "name": "is_mission_mode",
+          "type": "BOOL",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "是否為任務模式中所進行的行為。2022/9/1 前跟 mission 表對應，2022/9/1 後與 streaming 資料表對應（更新頻率較快），取得有對應到任務的紀錄",
+            "displayName": "is_mission_mode"
+          }
+        },
+        {
+          "name": "partition_date",
+          "type": "DATE",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "用來作分割的日期欄位，用此欄位進行過濾將降低查詢用量\n由於 bigquery 對於分割單位操作有 4000 單位的上限，故將超過 10 年以前的資料則是以年為分割單位",
+            "displayName": "partition_date"
+          }
+        },
+        {
+          "name": "points_earned",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "獲得的能量點數(Video, Exercise 才有可能為正值)",
+            "displayName": "points_earned"
+          }
+        },
+        {
+          "name": "total_seconds_taken",
+          "type": "INT64",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "總共耗費時間（秒）",
+            "displayName": "total_seconds_taken"
+          }
+        },
+        {
+          "name": "user_id",
+          "type": "STRING",
+          "isCalculated": false,
+          "notNull": false,
+          "properties": {
+            "description": "使用者的唯一辨識碼，代碼會包含前綴 \"user_id_key\"，關聯到後端資料庫中使用者實體的 \"key.name\"",
+            "displayName": "user_id"
+          }
+        },
+        {
+          "name": "dim_user_data",
+          "type": "dim_user_data",
+          "properties": {},
+          "relationship": "Fct_user_records_of_all_contentsUser_idDim_user_dataUser_id",
+          "isCalculated": false,
+          "notNull": false
+        }
+      ],
+      "tableReference": {
+        "catalog": "junyiacademy",
+        "schema": "data_mart",
+        "table": "fct_user_records_of_all_contents"
+      },
+      "cached": false,
+      "properties": {
+        "displayName": "fct_user_records_of_all_contents",
+        "description": "\"使用者在平台上使用所有內容(Article, Exam, Video, Exercise)的行為。欄位包含：使用秒數、獲得能量點數、使用時間等。\""
+      },
+      "primaryKey": ""
+    }
+  ],
+  "relationships": [
+    {
+      "name": "Dim_datesCalendar_dateFct_user_records_of_all_contents_grained_to_dateCreated_date",
+      "models": [
+        "dim_dates",
+        "fct_user_records_of_all_contents_grained_to_date"
+      ],
+      "joinType": "ONE_TO_MANY",
+      "condition": "\"dim_dates\".calendar_date = \"fct_user_records_of_all_contents_grained_to_date\".created_date",
+      "properties": {}
+    },
+    {
+      "name": "Dim_schools_metadataSchool_id_sha256Dim_user_dataUser_school_id_sha256",
+      "models": [
+        "dim_schools_metadata",
+        "dim_user_data"
+      ],
+      "joinType": "ONE_TO_MANY",
+      "condition": "\"dim_schools_metadata\".school_id_sha256 = \"dim_user_data\".user_school_id_sha256",
+      "properties": {}
+    },
+    {
+      "name": "Dim_teacher_student_joinsTeacher_user_idDim_user_dataUser_id",
+      "models": [
+        "dim_teacher_student_joins",
+        "dim_user_data"
+      ],
+      "joinType": "ONE_TO_MANY",
+      "condition": "\"dim_teacher_student_joins\".teacher_user_id = \"dim_user_data\".user_id",
+      "properties": {}
+    },
+    {
+      "name": "Fct_teacher_level_scoreTeacher_user_idDim_user_dataUser_id",
+      "models": [
+        "fct_teacher_level_score",
+        "dim_user_data"
+      ],
+      "joinType": "MANY_TO_ONE",
+      "condition": "\"fct_teacher_level_score\".teacher_user_id = \"dim_user_data\".user_id",
+      "properties": {}
+    },
+    {
+      "name": "Fct_user_records_of_missions_grained_to_missionsAssignee_idDim_user_dataUser_id",
+      "models": [
+        "fct_user_records_of_missions_grained_to_missions",
+        "dim_user_data"
+      ],
+      "joinType": "MANY_TO_ONE",
+      "condition": "\"fct_user_records_of_missions_grained_to_missions\".assignee_id = \"dim_user_data\".user_id",
+      "properties": {}
+    },
+    {
+      "name": "Fct_user_records_of_all_contentsUser_idDim_user_dataUser_id",
+      "models": [
+        "fct_user_records_of_all_contents",
+        "dim_user_data"
+      ],
+      "joinType": "ONE_TO_MANY",
+      "condition": "\"fct_user_records_of_all_contents\".user_id = \"dim_user_data\".user_id",
+      "properties": {}
+    }
+  ],
+  "views": []
+}

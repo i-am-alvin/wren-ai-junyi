@@ -161,9 +161,1545 @@ SELECT * FROM user_role_stats ORDER BY user_count DESC;",20,2025-06-19T23:01:26.
 測試 CTE,"-- CTE: 測試 - 簡單測試
 WITH test AS (SELECT 1 as id)
 SELECT * FROM test",20,2025-06-19T23:03:06.000Z,2025-06-19T23:03:06.000Z
+指定範圍影片使用者評分統計是什麼？,"-- CTE: 指定範圍影片評分統計 - 計算目標範圍內影片的評分統計資訊
+WITH content_id_selected AS (
+  -- 選擇指定目標範圍內的所有內容ID
+  SELECT ""content_id""
+  FROM ""data_mart"".""dim_contents""
+  WHERE ""level0_id"" = {{target_id}}
+     OR ""level1_id"" = {{target_id}}
+     OR ""level2_id"" = {{target_id}}
+     OR ""level3_id"" = {{target_id}}
+     OR ""level4_id"" = {{target_id}}
+     OR ""level5_id"" = {{target_id}}
+),
+user_data AS (
+  -- 篩選出非管理員和非開發者的用戶
+  SELECT ""user_id"" 
+  FROM ""data_mart"".""dim_user_data""
+  WHERE NOT ""is_moderator"" AND NOT ""is_developer""
+)
+-- 計算目標範圍內影片的評分統計
+SELECT
+  {{target_id}} AS ""target_id"",
+  COUNT(*) AS ""rating_cnt"",
+  ROUND(AVG(""rating""), 2) AS ""avg_rating""
+FROM ""data_mart"".""fct_user_records_of_video_ratings"" AS ""A""
+INNER JOIN ""content_id_selected"" AS ""B""
+  ON ""A"".""video_id"" = ""B"".""content_id""
+INNER JOIN ""user_data""
+  USING(""user_id"")
+WHERE DATE(""created_at_tw"") BETWEEN {{start_time}} AND {{end_time}}",20,2025-06-19T23:10:00.000Z,2025-06-19T23:10:00.000Z
+定期定額授權失敗喚回清單有哪些？,"-- CTE: 定期定額授權失敗喚回 - 顯示授權失敗的定期定額捐款記錄
+WITH donation_failed_list AS (
+  -- 從基礎資料表中選擇所有必要欄位
+  SELECT 
+    ""id"",
+    ""Donation_id"",
+    ""failed_date"",
+    ""email"",
+    ""name"",
+    ""phone"",
+    ""amount"",
+    ""terminate_type"",
+    ""execute_status"",
+    ""recall_status"",
+    ""payment_type"",
+    ""note"",
+    ""latest_status"",
+    ""duplicated_latest_status"",
+    ""uuid""
+  FROM ""donation_failed_records""
+)
+-- 產生包含操作連結的完整清單
+SELECT
+  ""id"",
+  ""Donation_id"",
+  ""failed_date"",
+  ""email"",
+  ""name"",
+  ""phone"",
+  ""amount"",
+  ""terminate_type"",
+  ""execute_status"",
+  ""recall_status"",
+  ""payment_type"",
+  ""note"",
+  ""latest_status"",
+  ""duplicated_latest_status"",
+  CONCAT('https://metabase.cloud.junyiacademy.org/dashboard/1784?id=', ""id"") AS ""edit_link"",
+  CONCAT('https://donate.junyiacademy.org/donation/uuid/(?P', ""uuid"", '[0-9a-z-]+)/confirm/') AS ""reauth_link"",
+  CONCAT('https://metabase.cloud.junyiacademy.org/dashboard/1787?id=', ""id"") AS ""reset_link""
+FROM ""donation_failed_list""",20,2025-06-19T23:11:00.000Z,2025-06-19T23:11:00.000Z
+縣市月報統計資訊有哪些？,"-- CTE: 縣市月報統計 - 計算指定月份各縣市學校的活躍用戶和教師統計
+WITH get_user_records_of_all_contents AS (
+  -- 取得所有內容的用戶記錄，包含用戶基本資訊
+  SELECT
+    ""a"".""user_id"",
+    DATE_TRUNC(""a"".""created_date"", MONTH) AS ""created_month"",
+    ""a"".""total_seconds_taken"",
+    ""a"".""is_mission_mode"",
+    ""b"".""user_city"",
+    ""b"".""user_school_id_sha256"",
+    ""b"".""user_school"",
+    ""b"".""user_school_level_type"",
+    ""b"".""is_registered""
+  FROM ""data_mart"".""fct_user_records_of_all_contents_grained_to_users"" AS ""a"" 
+  LEFT JOIN ""data_mart"".""dim_user_data"" AS ""b""
+    USING(""user_id"")
+  WHERE 
+    DATE_TRUNC(""a"".""created_date"", MONTH) = DATE(CONCAT(CAST({{year_param}} AS STRING), '-', LPAD(CAST({{month_param}} AS STRING), 2, '0'), '-01'))
+    AND ""partition_date"" BETWEEN DATE(CONCAT(CAST({{year_param}} AS STRING), '-', LPAD(CAST({{month_param}} AS STRING), 2, '0'), '-01')) 
+                              AND DATE_ADD(DATE(CONCAT(CAST({{year_param}} AS STRING), '-', LPAD(CAST({{month_param}} AS STRING), 2, '0'), '-01')), INTERVAL 34 DAY)
+    AND ""user_id"" IS NOT NULL
+),
+user_records_grained_to_school AS (
+  -- 將用戶記錄按學校分組統計
+  SELECT
+    ""created_month"",
+    ""user_city"",
+    ""user_school_id_sha256"",
+    ""user_school"",
+    ""user_school_level_type"",
+    COUNT(DISTINCT ""user_id"") AS ""active_user_count"",
+    COUNT(DISTINCT CASE WHEN ""is_registered"" THEN ""user_id"" END) AS ""active_registered_user_count"",
+    ROUND(SUM(""total_seconds_taken"") / 60, 2) AS ""total_minutes_taken"",
+    ROUND((SUM(""total_seconds_taken"") / COUNT(DISTINCT ""user_id"")) / 60, 2) AS ""avg_total_minutes_taken_per_user""
+  FROM ""get_user_records_of_all_contents""
+  WHERE ""total_seconds_taken"" > 0
+  GROUP BY 
+    ""created_month"",
+    ""user_city"",
+    ""user_school_id_sha256"",
+    ""user_school"",
+    ""user_school_level_type""
+),
+assign_mission_logs AS (
+  -- 取得任務指派記錄
+  SELECT DISTINCT ""assigner_id"", ""class_id""
+  FROM ""data_mart"".""fct_user_records_of_missions_grained_to_tasks""
+  WHERE DATE_TRUNC(DATE(""created_at_tw""), MONTH) = DATE(CONCAT(CAST({{year_param}} AS STRING), '-', LPAD(CAST({{month_param}} AS STRING), 2, '0'), '-01'))
+),
+get_class_activity AS (
+  -- 取得班級活動統計
+  SELECT
+    DATE(""month"") AS ""created_month"",
+    ""a"".""teacher_user_id"",
+    ""b"".""class_id"",
+    ""c"".""user_city"",
+    ""c"".""user_school_id_sha256"",
+    ""c"".""user_school"",
+    ""c"".""user_school_level_type""
+  FROM ""data_mart"".""fct_teacher_student_joins"" AS ""a""
+  INNER JOIN ""assign_mission_logs"" AS ""b""
+    ON ""a"".""teacher_user_id"" = ""b"".""assigner_id""
+  INNER JOIN ""data_mart"".""dim_user_data"" AS ""c""
+    ON ""a"".""teacher_user_id"" = ""c"".""user_id""
+  CROSS JOIN UNNEST(GENERATE_DATE_ARRAY(
+    DATE_TRUNC(DATE(""a"".""valid_from_tw""), MONTH),
+    DATE(""a"".""valid_to_tw""),
+    INTERVAL 1 MONTH
+  )) AS ""month""
+),
+class_activity_grained_to_school AS (
+  -- 將班級活動按學校分組統計
+  SELECT
+    ""created_month"",
+    ""user_city"",
+    ""user_school_id_sha256"",
+    ""user_school"",
+    ""user_school_level_type"",
+    COUNT(DISTINCT ""teacher_user_id"") AS ""active_teacher_count"",
+    COUNT(DISTINCT ""class_id"") AS ""active_class_count""
+  FROM ""get_class_activity""
+  GROUP BY
+    ""created_month"",
+    ""user_city"",
+    ""user_school_id_sha256"",
+    ""user_school"",
+    ""user_school_level_type""
+),
+add_school_metadata AS (
+  -- 加入學校元資料
+  SELECT
+    ""a"".""created_month"",
+    ""a"".""user_city"",
+    COALESCE(""b"".""school_name"", '未知') AS ""user_school"",
+    ""a"".""user_school_level_type"",
+    ""a"".""active_user_count"",
+    ""a"".""active_registered_user_count"",
+    ""a"".""active_teacher_count"",
+    ""a"".""active_class_count"",
+    ""a"".""total_minutes_taken"",
+    ""a"".""avg_total_minutes_taken_per_user"",
+    ""b"".""total_teachers_count"",
+    ""b"".""total_students_count""
+  FROM (
+    SELECT
+      ""a"".""created_month"",
+      COALESCE(""a"".""user_city"", ""b"".""user_city"") AS ""user_city"",
+      ""user_school_id_sha256"",
+      COALESCE(""a"".""user_school"", ""b"".""user_school"") AS ""user_school"",
+      COALESCE(""a"".""user_school_level_type"", ""b"".""user_school_level_type"") AS ""user_school_level_type"",
+      ""a"".""active_user_count"",
+      ""a"".""active_registered_user_count"",
+      ""b"".""active_teacher_count"",
+      ""b"".""active_class_count"",
+      ""a"".""total_minutes_taken"",
+      ""a"".""avg_total_minutes_taken_per_user""
+    FROM ""user_records_grained_to_school"" AS ""a""
+    LEFT JOIN ""class_activity_grained_to_school"" AS ""b""
+      USING(""created_month"", ""user_school_id_sha256"")
+  ) AS ""a""
+  LEFT JOIN ""junyiacademy"".""data_mart"".""dim_schools_metadata"" AS ""b""
+    ON ""a"".""user_school_id_sha256"" = ""b"".""school_id_sha256""
+    AND ""b"".""school_country"" = '臺灣'
+)
+-- 最終輸出結果，包含學校層級轉換
+SELECT
+  ""created_month"",
+  ""user_city"",
+  ""user_school"",
+  CASE
+    WHEN ""user_school_level_type"" = 'junior' THEN '國中'
+    WHEN ""user_school_level_type"" = 'senior_and_technical' THEN '高中職'
+    WHEN ""user_school_level_type"" = 'elementary' THEN '國小'
+    WHEN ""user_school_level_type"" = 'junior_high' THEN '國中'
+    WHEN ""user_school_level_type"" = 'experimental' THEN '實驗學校'
+    WHEN ""user_school_level_type"" = 'international' THEN '國際學校'
+    WHEN ""user_school_level_type"" = 'university' THEN '大學'
+    ELSE '未知'
+  END AS ""user_school_level_type"",
+  ""active_user_count"",
+  ""active_registered_user_count"",
+  ""active_teacher_count"",
+  ""active_class_count"",
+  ""total_minutes_taken"",
+  ""avg_total_minutes_taken_per_user"",
+  ""total_students_count"",
+  ""total_teachers_count""
+FROM ""add_school_metadata""
+WHERE 1=1
+  AND ({{city_param}} IS NULL OR ""user_city"" LIKE {{city_param}})
+  AND ({{school_name_partial}} IS NULL OR ""user_school"" LIKE CONCAT('%', {{school_name_partial}}, '%'))
+ORDER BY
+  ""active_user_count"" DESC,
+  ""active_teacher_count"" DESC,
+  ""active_class_count"" DESC",20,2025-06-19T23:12:00.000Z,2025-06-19T23:12:00.000Z
+LV1老師總數有多少？,"-- CTE: LV1老師統計 - 計算指定條件下的LV1老師總數
+WITH lv1_teachers AS (
+  -- 篩選出LV1等級的老師
+  SELECT ""teacher_user_id""
+  FROM ""junyiacademy"".""data_mart"".""fct_teacher_level_score"" AS ""a""
+  INNER JOIN ""junyiacademy"".""data_mart"".""dim_user_data"" AS ""b""
+    ON ""a"".""teacher_user_id"" = ""b"".""user_id""
+  WHERE 
+    ""a"".""teacher_level_score"" = 1
+    AND ({{session_year_type_tw}} IS NULL OR ""a"".""session_year_type_tw"" = {{session_year_type_tw}})
+    AND ({{user_city}} IS NULL OR ""b"".""user_city"" = {{user_city}})
+    AND ({{user_school}} IS NULL OR ""b"".""user_school"" LIKE CONCAT('%', {{user_school}}, '%'))
+    AND ({{user_school_level_type}} IS NULL OR ""b"".""user_school_level_type"" = 
+      CASE 
+        WHEN {{user_school_level_type}} = '國小' THEN 'elementary'
+        WHEN {{user_school_level_type}} = '國中' THEN 'junior_high'
+        WHEN {{user_school_level_type}} = '高中職' THEN 'senior_and_technical'
+        WHEN {{user_school_level_type}} = '大專院校' THEN 'university'
+        WHEN {{user_school_level_type}} = '實驗學校' THEN 'experimental'
+        WHEN {{user_school_level_type}} = '國際學校' THEN 'international'
+        ELSE NULL
+      END)
+)
+-- 計算不重複的LV1老師總數
+SELECT 
+  COUNT(DISTINCT ""teacher_user_id"") AS ""unique_teacher_number""
+FROM ""lv1_teachers""",20,2025-06-19T23:13:00.000Z,2025-06-19T23:13:00.000Z
+老師的Level Score分佈如何？,"-- CTE: 老師Level Score分佈 - 計算老師等級分數的分佈統計
+WITH teacher_level_distribution AS (
+  -- 計算各等級老師數量和累積統計
+  SELECT 
+    ""a"".""teacher_level_score"", 
+    COUNT(DISTINCT ""a"".""teacher_user_id"") AS ""unique_teacher_number""
+  FROM ""junyiacademy"".""data_mart"".""fct_teacher_level_score"" AS ""a""
+  INNER JOIN ""junyiacademy"".""data_mart"".""dim_user_data"" AS ""b""
+    ON ""a"".""teacher_user_id"" = ""b"".""user_id""
+  WHERE 1=1
+    AND ({{session_year_type_tw}} IS NULL OR ""a"".""session_year_type_tw"" = {{session_year_type_tw}})
+    AND ({{user_city}} IS NULL OR ""b"".""user_city"" = {{user_city}})
+    AND ({{user_school}} IS NULL OR ""b"".""user_school"" LIKE CONCAT('%', {{user_school}}, '%'))
+    AND ({{user_school_level_type}} IS NULL OR ""b"".""user_school_level_type"" = 
+      CASE 
+        WHEN {{user_school_level_type}} = '國小' THEN 'elementary'
+        WHEN {{user_school_level_type}} = '國中' THEN 'junior_high'
+        WHEN {{user_school_level_type}} = '高中職' THEN 'senior_and_technical'
+        WHEN {{user_school_level_type}} = '大專院校' THEN 'university'
+        WHEN {{user_school_level_type}} = '實驗學校' THEN 'experimental'
+        WHEN {{user_school_level_type}} = '國際學校' THEN 'international'
+        ELSE NULL
+      END)
+  GROUP BY ""a"".""teacher_level_score""
+)
+-- 輸出各等級老師數量及累積統計
+SELECT
+  ""teacher_level_score"",
+  ""unique_teacher_number"",
+  SUM(""unique_teacher_number"") OVER(ORDER BY ""teacher_level_score"" DESC) AS ""teacher_number_aggregation""
+FROM ""teacher_level_distribution""
+ORDER BY ""teacher_level_score""",20,2025-06-19T23:14:00.000Z,2025-06-19T23:14:00.000Z
+近一年每個月所有管道小額捐款總額是多少？,"-- CTE: 各管道捐款統計 - 統計近期各管道的小額捐款總額
+WITH donation_data AS (
+  -- 官網定期定額捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '官網定期定額' AS ""channel"", 
+    ""amount""
+  FROM ""monthly_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 官網單筆捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '官網單筆' AS ""channel"", 
+    ""amount""
+  FROM ""once_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 台積電捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '台積電' AS ""channel"", 
+    ""amount""
+  FROM ""manual_tsmc_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- ibon捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'ibon' AS ""channel"", 
+    ""amount""
+  FROM ""manual_ibon_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 匯款捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '匯款' AS ""channel"", 
+    ""amount""
+  FROM ""manual_transfer_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- Benevity捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'Benevity' AS ""channel"", 
+    ""amount""
+  FROM ""manual_benevity_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 街口捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '街口' AS ""channel"", 
+    ""amount""
+  FROM ""manual_jkos_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- LINE Pay愛心捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'LINE Pay 愛心捐款' AS ""channel"", 
+    SUM(""item_amount"") AS ""amount""
+  FROM ""line_pay_poa_junyiacademy""
+  WHERE ""trx_ymd"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""trx_ymd"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+  GROUP BY STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d')
+)
+-- 依月份和金額排序輸出結果
+SELECT * FROM ""donation_data""
+ORDER BY ""month"", ""amount"" DESC",20,2025-06-19T23:15:00.000Z,2025-06-19T23:15:00.000Z
+近一年每個月各管道小額捐款金額趨勢如何？,"-- CTE: 各管道捐款趨勢 - 統計近期各管道的小額捐款金額趨勢
+WITH donation_trend_data AS (
+  -- 官網定期定額捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '官網定期定額' AS ""channel"", 
+    ""amount""
+  FROM ""monthly_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 官網單筆捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '官網單筆' AS ""channel"", 
+    ""amount""
+  FROM ""once_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 台積電捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '台積電' AS ""channel"", 
+    ""amount""
+  FROM ""manual_tsmc_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- ibon捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'ibon' AS ""channel"", 
+    ""amount""
+  FROM ""manual_ibon_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 匯款捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '匯款' AS ""channel"", 
+    ""amount""
+  FROM ""manual_transfer_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- Benevity捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'Benevity' AS ""channel"", 
+    ""amount""
+  FROM ""manual_benevity_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 街口捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    '街口' AS ""channel"", 
+    ""amount""
+  FROM ""manual_jkos_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- LINE Pay愛心捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"",
+    'LINE Pay 愛心捐款' AS ""channel"", 
+    SUM(""item_amount"") AS ""amount""
+  FROM ""line_pay_poa_junyiacademy""
+  WHERE ""trx_ymd"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""trx_ymd"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+  GROUP BY STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d')
+)
+-- 依月份和金額排序輸出結果
+SELECT * FROM ""donation_trend_data""
+ORDER BY ""month"", ""amount"" DESC",20,2025-06-19T23:16:00.000Z,2025-06-19T23:16:00.000Z
+近一年每個月各管道小額捐款金額分佈如何？,"-- CTE: 各管道捐款金額分佈 - 統計近期各管道的小額捐款金額分佈
+WITH donation_distribution_data AS (
+  -- 官網定期定額捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '官網定期定額' AS ""channel"", 
+    ""amount""
+  FROM ""monthly_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 官網單筆捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '官網單筆' AS ""channel"", 
+    ""amount""
+  FROM ""once_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 台積電捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '台積電' AS ""channel"", 
+    ""amount""
+  FROM ""manual_tsmc_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- ibon捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    'ibon' AS ""channel"", 
+    ""amount""
+  FROM ""manual_ibon_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 匯款捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '匯款' AS ""channel"", 
+    ""amount""
+  FROM ""manual_transfer_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- Benevity捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    'Benevity' AS ""channel"", 
+    ""amount""
+  FROM ""manual_benevity_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 街口捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '街口' AS ""channel"", 
+    ""amount""
+  FROM ""manual_jkos_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- LINE Pay愛心捐款
+  SELECT
+    DATE_FORMAT(""trx_ymd"", '%Y-%m') AS ""month"",
+    'LINE Pay 愛心捐款' AS ""channel"", 
+    SUM(""item_amount"") AS ""amount""
+  FROM ""line_pay_poa_junyiacademy""
+  WHERE ""trx_ymd"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -{{last_n_month}} MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""trx_ymd"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+  GROUP BY DATE_FORMAT(""trx_ymd"", '%Y-%m')
+)
+-- 依月份和金額排序輸出結果
+SELECT * FROM ""donation_distribution_data""
+ORDER BY ""month"", ""amount"" DESC",20,2025-06-19T23:17:00.000Z,2025-06-19T23:17:00.000Z
+近兩個月各管道小額捐款金額統計如何？,"-- CTE: 近兩個月各管道捐款統計 - 統計近兩個月各管道的小額捐款金額
+WITH recent_donation_data AS (
+  -- 官網定期定額捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '官網定期定額' AS ""channel"", 
+    ""amount""
+  FROM ""monthly_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 官網單筆捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '官網單筆' AS ""channel"", 
+    ""amount""
+  FROM ""once_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 台積電捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '台積電' AS ""channel"", 
+    ""amount""
+  FROM ""manual_tsmc_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- ibon捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    'ibon' AS ""channel"", 
+    ""amount""
+  FROM ""manual_ibon_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 匯款捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '匯款' AS ""channel"", 
+    ""amount""
+  FROM ""manual_transfer_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- Benevity捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    'Benevity' AS ""channel"", 
+    ""amount""
+  FROM ""manual_benevity_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 街口捐款
+  SELECT
+    DATE_FORMAT(""month"", '%Y-%m') AS ""month"",
+    '街口' AS ""channel"", 
+    ""amount""
+  FROM ""manual_jkos_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- LINE Pay愛心捐款
+  SELECT
+    DATE_FORMAT(""trx_ymd"", '%Y-%m') AS ""month"",
+    'LINE Pay 愛心捐款' AS ""channel"", 
+    SUM(""item_amount"") AS ""amount""
+  FROM ""line_pay_poa_junyiacademy""
+  WHERE ""trx_ymd"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""trx_ymd"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+  GROUP BY DATE_FORMAT(""trx_ymd"", '%Y-%m')
+)
+-- 依月份和金額排序輸出結果
+SELECT * FROM ""recent_donation_data""
+ORDER BY ""month"", ""amount"" DESC",20,2025-06-19T23:18:00.000Z,2025-06-19T23:18:00.000Z
+上個月所有管道小額捐款金額總計是多少？,"-- CTE: 上個月捐款總計 - 計算上個月所有管道的小額捐款總額
+WITH last_month_donations AS (
+  -- 官網定期定額捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""monthly_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 官網單筆捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""once_donation_trend_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 台積電捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""manual_tsmc_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- ibon捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""manual_ibon_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 匯款捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""manual_transfer_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- Benevity捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""manual_benevity_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- 街口捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""month"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    ""amount""
+  FROM ""manual_jkos_donation_table""
+  WHERE ""month"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""month"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+
+  UNION
+
+  -- LINE Pay愛心捐款
+  SELECT
+    STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d') AS ""month"", 
+    SUM(""item_amount"") AS ""amount""
+  FROM ""line_pay_poa_junyiacademy""
+  WHERE ""trx_ymd"" >= STR_TO_DATE(CONCAT(DATE_FORMAT(DATE_ADD(NOW(6), INTERVAL -2 MONTH), '%Y-%m'), '-01'), '%Y-%m-%d')
+    AND ""trx_ymd"" < STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(6), '%Y-%m'), '-01'), '%Y-%m-%d')
+  GROUP BY STR_TO_DATE(CONCAT(DATE_FORMAT(""trx_ymd"", '%Y-%m'), '-01'), '%Y-%m-%d')
+)
+-- 按月份分組計算總額
+SELECT 
+  ""month"", 
+  SUM(""amount"") AS ""total_amount""
+FROM ""last_month_donations""
+GROUP BY ""month""
+ORDER BY ""month""",20,2025-06-19T23:19:00.000Z,2025-06-19T23:19:00.000Z
+總用戶數有多少？,"-- CTE: 總用戶統計 - 計算平台總用戶數
+WITH user_count AS (
+  -- 計算所有用戶總數
+  SELECT COUNT(*) AS ""total_users""
+  FROM ""data_mart"".""dim_user_data""
+)
+SELECT ""total_users"" FROM ""user_count""",20,2025-06-19T23:20:00.000Z,2025-06-19T23:20:00.000Z
+平台總內容數有多少？,"-- CTE: 內容統計 - 計算平台總內容數
+WITH content_count AS (
+  -- 計算所有內容總數
+  SELECT COUNT(*) AS ""total_contents""
+  FROM ""data_mart"".""dim_contents""
+)
+SELECT ""total_contents"" FROM ""content_count""",20,2025-06-19T23:21:00.000Z,2025-06-19T23:21:00.000Z
+用戶總學習時數是多少？,"-- CTE: 學習時數統計 - 計算用戶總學習時數
+WITH learning_hours AS (
+  -- 計算所有用戶的總學習時數（秒轉小時）
+  SELECT ROUND(SUM(""total_seconds_taken"") / 3600, 2) AS ""total_hours_taken""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""total_seconds_taken"" > 0
+)
+SELECT ""total_hours_taken"" FROM ""learning_hours""",20,2025-06-19T23:22:00.000Z,2025-06-19T23:22:00.000Z
+用戶總獲得積分是多少？,"-- CTE: 積分統計 - 計算用戶總獲得積分
+WITH points_earned AS (
+  -- 計算所有用戶的總獲得積分
+  SELECT SUM(""points_earned"") AS ""total_points_earned""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""points_earned"" > 0
+)
+SELECT ""total_points_earned"" FROM ""points_earned""",20,2025-06-19T23:23:00.000Z,2025-06-19T23:23:00.000Z
+各學制用戶數分佈如何？,"-- CTE: 學制用戶分佈 - 計算各學制的用戶數量
+WITH school_level_distribution AS (
+  -- 計算各學制的用戶數量
+  SELECT 
+    SUM(CASE WHEN ""user_school_level_type"" = 'elementary' THEN 1 ELSE 0 END) AS ""elementary_users"",
+    SUM(CASE WHEN ""user_school_level_type"" = 'junior_high' THEN 1 ELSE 0 END) AS ""junior_high_users"",
+    SUM(CASE WHEN ""user_school_level_type"" IN ('senior_and_technical', 'senior') THEN 1 ELSE 0 END) AS ""senior_high_users""
+  FROM ""data_mart"".""dim_user_data""
+  WHERE ""user_school_level_type"" IS NOT NULL
+)
+SELECT * FROM ""school_level_distribution""",20,2025-06-19T23:24:00.000Z,2025-06-19T23:24:00.000Z
+各類型內容互動次數統計如何？,"-- CTE: 內容互動統計 - 計算各類型內容的互動次數
+WITH content_interactions AS (
+  -- 計算習題和影片的互動次數
+  SELECT 
+    SUM(CASE WHEN ""content_kind"" = 'Exercise' THEN 1 ELSE 0 END) AS ""exercise_interactions"",
+    SUM(CASE WHEN ""content_kind"" = 'Video' THEN 1 ELSE 0 END) AS ""video_interactions""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+)
+SELECT * FROM ""content_interactions""",20,2025-06-19T23:25:00.000Z,2025-06-19T23:25:00.000Z
+任務模式與自由模式使用情況如何？,"-- CTE: 學習模式統計 - 計算任務模式與自由模式的使用情況
+WITH learning_mode_stats AS (
+  -- 計算任務模式和自由模式的互動次數
+  SELECT 
+    SUM(CASE WHEN ""is_mission_mode"" = true THEN 1 ELSE 0 END) AS ""mission_mode_interactions"",
+    SUM(CASE WHEN ""is_mission_mode"" = false THEN 1 ELSE 0 END) AS ""free_mode_interactions""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+)
+SELECT * FROM ""learning_mode_stats""",20,2025-06-19T23:26:00.000Z,2025-06-19T23:26:00.000Z
+各類型內容的使用用戶數有多少？,"-- CTE: 內容使用用戶統計 - 計算各類型內容的使用用戶數
+WITH content_user_stats AS (
+  -- 計算使用過習題和影片的不重複用戶數
+  SELECT 
+    COUNT(DISTINCT CASE WHEN ""content_kind"" = 'Exercise' THEN ""user_id"" END) AS ""users_with_exercise"",
+    COUNT(DISTINCT CASE WHEN ""content_kind"" = 'Video' THEN ""user_id"" END) AS ""users_with_video""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+)
+SELECT * FROM ""content_user_stats""",20,2025-06-19T23:27:00.000Z,2025-06-19T23:27:00.000Z
+各學習模式的使用用戶數有多少？,"-- CTE: 學習模式用戶統計 - 計算各學習模式的使用用戶數
+WITH mode_user_stats AS (
+  -- 計算使用過任務模式和自由模式的不重複用戶數
+  SELECT 
+    COUNT(DISTINCT CASE WHEN ""is_mission_mode"" = true THEN ""user_id"" END) AS ""users_with_mission_mode"",
+    COUNT(DISTINCT CASE WHEN ""is_mission_mode"" = false THEN ""user_id"" END) AS ""users_with_free_mode""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+)
+SELECT * FROM ""mode_user_stats""",20,2025-06-19T23:28:00.000Z,2025-06-19T23:28:00.000Z
+平台有多少個不重複時間區間？,"-- CTE: 時間區間統計 - 計算平台不重複時間區間數
+WITH time_intervals AS (
+  -- 計算不重複的時間區間數量
+  SELECT COUNT(DISTINCT DATE(""created_at_tw"")) AS ""unique_time_intervals""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""created_at_tw"" IS NOT NULL
+)
+SELECT ""unique_time_intervals"" FROM ""time_intervals""",20,2025-06-19T23:29:00.000Z,2025-06-19T23:29:00.000Z
+平均每次互動學習時數是多少？,"-- CTE: 平均互動時數統計 - 計算平均每次互動的學習時數
+WITH avg_interaction_hours AS (
+  -- 計算平均每次互動的學習時數
+  SELECT ROUND(AVG(""total_seconds_taken"") / 3600, 3) AS ""avg_hours_per_interaction""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""total_seconds_taken"" > 0
+)
+SELECT ""avg_hours_per_interaction"" FROM ""avg_interaction_hours""",20,2025-06-19T23:30:00.000Z,2025-06-19T23:30:00.000Z
+平均每次互動獲得積分是多少？,"-- CTE: 平均互動積分統計 - 計算平均每次互動的獲得積分
+WITH avg_interaction_points AS (
+  -- 計算平均每次互動的獲得積分
+  SELECT ROUND(AVG(""points_earned""), 2) AS ""avg_points_per_interaction""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""points_earned"" > 0
+)
+SELECT ""avg_points_per_interaction"" FROM ""avg_interaction_points""",20,2025-06-19T23:31:00.000Z,2025-06-19T23:31:00.000Z
+平台整體使用統計概覽如何？,"-- CTE: 平台整體統計概覽 - 提供平台各項關鍵指標的綜合統計
+WITH platform_overview AS (
+  -- 計算用戶相關統計
+  SELECT 
+    COUNT(DISTINCT ""u"".""user_id"") AS ""total_users"",
+    SUM(CASE WHEN ""u"".""user_school_level_type"" = 'elementary' THEN 1 ELSE 0 END) AS ""elementary_users"",
+    SUM(CASE WHEN ""u"".""user_school_level_type"" = 'junior_high' THEN 1 ELSE 0 END) AS ""junior_high_users"",
+    SUM(CASE WHEN ""u"".""user_school_level_type"" IN ('senior_and_technical', 'senior') THEN 1 ELSE 0 END) AS ""senior_high_users""
+  FROM ""data_mart"".""dim_user_data"" AS ""u""
+),
+content_overview AS (
+  -- 計算內容相關統計
+  SELECT COUNT(*) AS ""total_contents""
+  FROM ""data_mart"".""dim_contents""
+),
+interaction_overview AS (
+  -- 計算互動相關統計
+  SELECT 
+    ROUND(SUM(""total_seconds_taken"") / 3600, 2) AS ""total_hours_taken"",
+    SUM(""points_earned"") AS ""total_points_earned"",
+    SUM(CASE WHEN ""content_kind"" = 'Exercise' THEN 1 ELSE 0 END) AS ""exercise_interactions"",
+    SUM(CASE WHEN ""content_kind"" = 'Video' THEN 1 ELSE 0 END) AS ""video_interactions"",
+    SUM(CASE WHEN ""is_mission_mode"" = true THEN 1 ELSE 0 END) AS ""mission_mode_interactions"",
+    SUM(CASE WHEN ""is_mission_mode"" = false THEN 1 ELSE 0 END) AS ""free_mode_interactions"",
+    COUNT(DISTINCT CASE WHEN ""content_kind"" = 'Exercise' THEN ""user_id"" END) AS ""users_with_exercise"",
+    COUNT(DISTINCT CASE WHEN ""content_kind"" = 'Video' THEN ""user_id"" END) AS ""users_with_video"",
+    COUNT(DISTINCT CASE WHEN ""is_mission_mode"" = true THEN ""user_id"" END) AS ""users_with_mission_mode"",
+    COUNT(DISTINCT CASE WHEN ""is_mission_mode"" = false THEN ""user_id"" END) AS ""users_with_free_mode"",
+    COUNT(DISTINCT DATE(""created_at_tw"")) AS ""unique_time_intervals"",
+    ROUND(AVG(""total_seconds_taken"") / 3600, 3) AS ""avg_hours_per_interaction"",
+    ROUND(AVG(""points_earned""), 2) AS ""avg_points_per_interaction""
+  FROM ""data_mart"".""fct_user_records_of_all_contents""
+  WHERE ""total_seconds_taken"" > 0 OR ""points_earned"" > 0
+)
+-- 綜合所有統計結果
+SELECT 
+  ""p"".""total_users"",
+  ""c"".""total_contents"",
+  ""i"".""total_hours_taken"",
+  ""i"".""total_points_earned"",
+  ""p"".""elementary_users"",
+  ""p"".""junior_high_users"",
+  ""p"".""senior_high_users"",
+  ""i"".""exercise_interactions"",
+  ""i"".""video_interactions"",
+  ""i"".""mission_mode_interactions"",
+  ""i"".""free_mode_interactions"",
+  ""i"".""users_with_exercise"",
+  ""i"".""users_with_video"",
+  ""i"".""users_with_mission_mode"",
+  ""i"".""users_with_free_mode"",
+  ""i"".""unique_time_intervals"",
+  ""i"".""avg_hours_per_interaction"",
+  ""i"".""avg_points_per_interaction""
+FROM ""platform_overview"" AS ""p""
+CROSS JOIN ""content_overview"" AS ""c""
+CROSS JOIN ""interaction_overview"" AS ""i""",20,2025-06-19T23:32:00.000Z,2025-06-19T23:32:00.000Z
 每個使用者角色有多少人？（測試）,"-- CTE: 使用者統計 - 計算使用者總數
 WITH user_stats AS (
   SELECT user_role, COUNT(*) as user_count
   FROM dim_user_data GROUP BY user_role
 )
 SELECT user_role, user_count FROM user_stats ORDER BY user_count DESC;",20,2025-06-19T23:03:55.000Z,2025-06-19T23:03:55.000Z
+宜蘭API當下指派的紀錄（1小時內）是什麼？,"WITH
+  assign_missions AS
+  -- 從指派任務日誌中選擇過去1小時內的指派紀錄，並提取第一個任務ID。
+  (
+    SELECT
+      ""assigner_email"" AS ""assigner_user_email"",
+      ""assignee_email"" AS ""assignee_user_email"",
+      ""mission_id"",
+      ""task_id_list"",
+      REGEXP_REPLACE(SPLIT(""task_id_list"", ',')[SAFE_OFFSET(0)], r'[\[\]""]', '') AS ""first_task_id"",
+      ""timestamp"" AS ""assigned_at""
+    FROM
+      ""streaming_log"".""log_assign_mission""
+    WHERE
+      ""timestamp"" >= TIMESTAMP(TIMESTAMP_SUB(CURRENT_DATETIME('+0'), INTERVAL 1 HOUR))
+      AND (
+        DATE(""_PARTITIONTIME"") >= DATE(DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+        OR ""_PARTITIONTIME"" IS NULL
+      )
+  ),
+  user_identifications AS
+  -- 從用戶識別表中選擇用戶郵箱和宜蘭郵箱的對應關係。
+  (
+    SELECT
+      ""user_email"",
+      ""yilan_email""
+    FROM
+      ""data_mart"".""dim_user_identifications_of_yilan""
+  ),
+  contents_info AS
+  -- 從內容維度表中選擇內容ID和內容類型。
+  (
+    SELECT DISTINCT
+      ""content_id"",
+      ""content_kind""
+    FROM
+      ""data_mart"".""dim_contents""
+  ),
+  combine_users_info AS
+  -- 結合學生和教師的用戶資訊與指派任務資料。
+  (
+    SELECT
+      ""student"".""user_email"" AS ""student_user_email"",
+      ""teacher"".""user_email"" AS ""teacher_user_email"",
+      ""student"".""yilan_email"" AS ""student_yilan_email"",
+      ""teacher"".""yilan_email"" AS ""teacher_yilan_email"",
+      ""a"".""mission_id"",
+      ""a"".""first_task_id"",
+      ""a"".""task_id_list"",
+      ""a"".""assigned_at""
+    FROM
+      ""assign_missions"" AS ""a""
+      INNER JOIN ""user_identifications"" AS ""student"" ON ""a"".""assignee_user_email"" = ""student"".""user_email""
+      LEFT JOIN ""user_identifications"" AS ""teacher"" ON ""a"".""assigner_user_email"" = ""teacher"".""user_email""
+  ),
+  combine_contents_info AS
+  -- 結合內容資訊，並根據內容類型生成對應的內容標籤。
+  (
+    SELECT
+      ""a"".*,
+      ""b"".""content_kind"",
+      CASE ""b"".""content_kind""
+        WHEN 'Video' THEN 'v'
+        WHEN 'Exercise' THEN 'exercise'
+        WHEN 'Exam' THEN 'exam'
+        WHEN 'Article' THEN 'article'
+        ELSE 'c_exam'
+      END AS ""content_tag""
+    FROM
+      ""combine_users_info"" AS ""a""
+      LEFT JOIN ""contents_info"" AS ""b"" ON ""a"".""first_task_id"" = ""b"".""content_id""
+  ),
+  add_url AS
+  -- 為每個指派任務生成對應的URL連結。
+  (
+    SELECT
+      *,
+      CONCAT('https://www.junyiacademy.org/', ""content_tag"", '/', ""first_task_id"", '?mission_id=', ""mission_id"", '&utm_campaign=yilan_iportal') AS ""url""
+    FROM
+      ""combine_contents_info""
+  )
+-- 選擇最終結果，包含指派者、被指派者、任務資訊和URL連結。
+SELECT
+  ""teacher_user_email"" AS ""assigner_email"",
+  ""student_user_email"" AS ""assignee_email"",
+  CAST(NULL AS STRING) AS ""mission_title"",
+  ""mission_id"",
+  ""task_id_list"",
+  ""first_task_id"",
+  TIMESTAMP_SUB(""assigned_at"", INTERVAL 8 HOUR) AS ""timestamp"",
+  ""assigned_at"" AS ""timestamp_TW"",
+  ""student_yilan_email"" AS ""student_backup_email"",
+  ""teacher_yilan_email"" AS ""teacher_backup_email"",
+  ""student_yilan_email"",
+  ""teacher_yilan_email"",
+  ""content_kind"",
+  ""content_tag"",
+  ""url""
+FROM
+  ""add_url""
+ORDER BY
+  ""timestamp"" DESC",20,2025-06-20T08:00:00.000Z,2025-06-20T08:00:00.000Z
+2030 AI教育年會已開賽人數有多少？,"WITH
+  mission_start AS
+  -- 從指派任務日誌中選擇今日開始特定任務的不重複用戶ID。
+  (
+    SELECT DISTINCT
+      ""assignee_id"" AS ""id""
+    FROM
+      ""streaming_log"".""log_assign_mission_for_ai_summit_2030""
+    WHERE
+      ""mission_id"" IN ('84344ac09807400994f57f73aba0619a', '0e3546eab3d44b1894b10fabf87a96ba', 'fc3b04a71c8343ba87d29b2f26815a67')
+      AND DATE(""timestamp"") = CURRENT_DATE
+  ),
+  mission_ended AS
+  -- 從任務完成日誌中選擇今日完成特定任務的不重複用戶郵箱。
+  (
+    SELECT DISTINCT
+      ""assignee_key_email"" AS ""id""
+    FROM
+      ""streaming_log"".""log_mission_completed_for_ai_summit_2030""
+    WHERE
+      ""mission_id"" IN ('84344ac09807400994f57f73aba0619a', '0e3546eab3d44b1894b10fabf87a96ba', 'fc3b04a71c8343ba87d29b2f26815a67')
+      AND DATE(""completed_time"") = CURRENT_DATE
+  ),
+  name_list AS
+  -- 合併開始任務和完成任務的用戶列表。
+  (
+    SELECT ""id"" FROM ""mission_start""
+    UNION ALL
+    SELECT ""id"" FROM ""mission_ended""
+  )
+-- 計算參與AI教育年會的不重複用戶總數。
+SELECT
+  COUNT(DISTINCT ""id"") AS ""total_participants""
+FROM
+  ""name_list""",20,2025-06-20T08:00:01.000Z,2025-06-20T08:00:01.000Z
+2030 AI教育年會任務均完成總人數是多少？,"WITH
+  mission_completed_list AS
+  -- 從任務完成日誌中選擇今日完成所有三個指定任務的用戶。
+  (
+    SELECT
+      ""assignee_key_email""
+    FROM
+      ""streaming_log"".""log_mission_completed_for_ai_summit_2030""
+    WHERE
+      ""mission_id"" IN ('84344ac09807400994f57f73aba0619a', '0e3546eab3d44b1894b10fabf87a96ba', 'fc3b04a71c8343ba87d29b2f26815a67')
+      AND DATE(""completed_time"") = CURRENT_DATE
+    GROUP BY
+      ""assignee_key_email""
+    HAVING
+      COUNT(DISTINCT ""mission_id"") = 3
+  )
+-- 計算完成所有三個任務的用戶總數。
+SELECT
+  COUNT(*) AS ""mission_count""
+FROM
+  ""mission_completed_list""",20,2025-06-20T08:00:02.000Z,2025-06-20T08:00:02.000Z
+各類使用者註冊人數分布如何？,"-- 計算各類使用者的註冊人數分布，處理空值角色為others。
+SELECT
+  CASE
+    WHEN ""user_role"" IS NULL THEN 'others'
+    ELSE ""user_role""
+  END AS ""user_role"",
+  COUNT(*) AS ""user_counts""
+FROM
+  ""data_mart"".""dim_user_data""
+WHERE
+  ""is_registered"" = TRUE
+GROUP BY
+  1
+ORDER BY
+  ""user_counts"" DESC",20,2025-06-20T08:00:03.000Z,2025-06-20T08:00:03.000Z
+目前線上影片總數是多少？,"-- 從內容統計維度表中查詢線上影片總數。
+SELECT
+  ""video_counts"" AS ""total_video_count""
+FROM
+  ""data_mart"".""dim_contents_counts""",20,2025-06-20T08:00:04.000Z,2025-06-20T08:00:04.000Z
+目前線上練習題總數是多少？,"-- 從內容統計維度表中查詢線上練習題總數。
+SELECT
+  ""quiz_counts"" AS ""total_quiz_count""
+FROM
+  ""data_mart"".""dim_contents_counts""",20,2025-06-20T08:00:05.000Z,2025-06-20T08:00:05.000Z
+目前知識點個數（線上）有多少？,"-- 從內容統計維度表中查詢線上知識點總數。
+SELECT
+  ""exercise_counts"" AS ""total_exercise_count""
+FROM
+  ""data_mart"".""dim_contents_counts""",20,2025-06-20T08:00:06.000Z,2025-06-20T08:00:06.000Z
+臺灣各縣市註冊人數統計分布如何？,"WITH
+  user_data AS
+  -- 計算各縣市不同角色的註冊用戶數量統計。
+  (
+    SELECT
+      ""user_city"",
+      COUNTIF(""user_role"" = 'student') AS ""student_cnt"",
+      COUNTIF(""user_role"" = 'teacher') AS ""teacher_cnt"",
+      COUNTIF(""user_role"" = 'parent') AS ""parent_cnt"",
+      COUNTIF(""user_role"" = 'others') + COUNTIF(""user_role"" IS NULL) AS ""others_cnt"",
+      COUNT(*) AS ""total_user_cnt""
+    FROM
+      ""data_mart"".""dim_user_data""
+    WHERE
+      ""is_registered"" = TRUE
+      AND ""user_city"" IS NOT NULL
+      AND ""user_city"" != 'not taiwan'
+    GROUP BY
+      ""user_city""
+  ),
+  gis_data AS
+  -- 從GIS靜態資料中取得各縣市的經緯度資訊，並統一台灣地名格式。
+  (
+    SELECT
+      REGEXP_REPLACE(""city_name"", '台', '臺') AS ""user_city"",
+      ""latitude"",
+      ""longitude""
+    FROM
+      ""static"".""TW_GIS""
+  )
+-- 結合用戶統計資料與地理位置資訊。
+SELECT
+  ""user_data"".""user_city"",
+  ""user_data"".""student_cnt"",
+  ""user_data"".""teacher_cnt"",
+  ""user_data"".""parent_cnt"",
+  ""user_data"".""others_cnt"",
+  ""user_data"".""total_user_cnt"",
+  ""gis_data"".""latitude"",
+  ""gis_data"".""longitude""
+FROM
+  ""user_data""
+  LEFT JOIN ""gis_data"" USING (""user_city"")
+ORDER BY
+  ""total_user_cnt"" DESC",20,2025-06-20T08:00:07.000Z,2025-06-20T08:00:07.000Z
+每月註冊人數趨勢如何？,"-- 從每月註冊統計事實表中查詢註冊人數趨勢，按年月排序。
+SELECT
+  ""year_month"",
+  ""monthly_register_count"",
+  ""total_register_count""
+FROM
+  ""data_mart"".""fct_register_counts_grained_to_month""
+ORDER BY
+  ""year_month""",20,2025-06-20T08:00:08.000Z,2025-06-20T08:00:08.000Z
+上週各縣市活躍人數分布如何？,"WITH
+  last_week_table AS
+  -- 取得最新一週的週次資訊。
+  (
+    SELECT
+      MAX(""created_week"") AS ""last_week""
+    FROM
+      ""data_mart"".""fct_active_users_with_city_and_role_grained_to_week""
+  )
+-- 計算上週各縣市的活躍用戶數量，排除未知地區。
+SELECT
+  ""user_city"",
+  COUNT(DISTINCT ""user_id"") AS ""active_user_cnt""
+FROM
+  ""data_mart"".""fct_active_users_with_city_and_role_grained_to_week""
+WHERE
+  ""created_week"" = (SELECT ""last_week"" FROM ""last_week_table"")
+  AND ""user_city"" != 'unknown'
+GROUP BY
+  ""user_city""
+ORDER BY
+  ""active_user_cnt"" DESC",20,2025-06-20T08:00:09.000Z,2025-06-20T08:00:09.000Z
+2030 AI教育年會總完成任務包數是多少？,"-- 計算2030 AI教育年會今日總完成任務包數。
+SELECT
+  COUNT(*) AS ""mission_completed""
+FROM
+  ""streaming_log"".""log_mission_completed_for_ai_summit_2030""
+WHERE
+  ""mission_id"" IN ('84344ac09807400994f57f73aba0619a', '0e3546eab3d44b1894b10fabf87a96ba', 'fc3b04a71c8343ba87d29b2f26815a67')
+  AND DATE(""completed_time"") = CURRENT_DATE",20,2025-06-20T08:00:10.000Z,2025-06-20T08:00:10.000Z
+週活躍人數趨勢如何？,"-- 從週活躍用戶事實表中查詢週活躍人數趨勢，按週次排序。
+SELECT
+  ""created_week"",
+  COUNT(DISTINCT ""user_id"") AS ""unique_user_cnt""
+FROM
+  ""data_mart"".""fct_active_users_with_city_and_role_grained_to_week""
+GROUP BY
+  ""created_week""
+ORDER BY
+  ""created_week""",20,2025-06-20T08:00:11.000Z,2025-06-20T08:00:11.000Z
+上週各時段平均活躍人數分布如何？,"-- 從上週各時段使用統計事實表中查詢平均活躍人數分布，按小時排序。
+SELECT
+  ""hour_of_day"",
+  ""average_user_counts"",
+  ""average_minutes_taken_per_user""
+FROM
+  ""data_mart"".""fct_usage_grained_to_hour_last_week""
+ORDER BY
+  ""hour_of_day""",20,2025-06-20T08:00:12.000Z,2025-06-20T08:00:12.000Z
+上週各時段平均使用時間分布如何？,"-- 從上週各時段使用統計事實表中查詢平均使用時間分布，按小時排序。
+SELECT
+  ""hour_of_day"",
+  ""average_user_counts"",
+  ""average_minutes_taken_per_user""
+FROM
+  ""data_mart"".""fct_usage_grained_to_hour_last_week""
+ORDER BY
+  ""hour_of_day""",20,2025-06-20T08:00:13.000Z,2025-06-20T08:00:13.000Z
+內容月使用人次趨勢如何？,"-- 計算各類內容的月使用人次趨勢，按月份和內容類型分組統計。
+SELECT
+  DATE_TRUNC(""created_date"", MONTH) AS ""created_month"",
+  ""content_kind"",
+  SUM(""total_users"") AS ""total_usage_by_month""
+FROM
+  ""data_mart"".""fct_user_records_of_all_contents_grained_to_contents""
+WHERE
+  ""total_seconds_taken"" > 0
+GROUP BY
+  ""created_month"",
+  ""content_kind""
+ORDER BY
+  ""created_month"" DESC",20,2025-06-20T08:00:14.000Z,2025-06-20T08:00:14.000Z
+宜蘭習題作答數據最新5分鐘內的情況如何？,"DECLARE ""last_updated_at"" TIMESTAMP;
+SET ""last_updated_at"" = (
+  SELECT
+    MAX(""timestamp"")
+  FROM
+    ""streaming_log"".""log_problem""
+  WHERE
+    DATE(""_PARTITIONTIME"") >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+    OR ""_PARTITIONTIME"" IS NULL
+);
+
+WITH
+  log_problem AS
+  -- 從問題日誌中選擇最新5分鐘內的作答記錄，僅包含嘗試類型的動作。
+  (
+    SELECT
+      ""user_key_email"" AS ""user_primary_key"",
+      ""exercise"" AS ""exercise_id"",
+      ""quiz_pid"" AS ""quiz_id"",
+      ""quiz_index"",
+      ""time_taken"",
+      ""is_correct"",
+      ""timestamp""
+    FROM
+      ""streaming_log"".""log_problem""
+    WHERE
+      (
+        DATE(""_PARTITIONTIME"") >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+        OR ""_PARTITIONTIME"" IS NULL
+      )
+      AND ""timestamp"" BETWEEN TIMESTAMP_TRUNC(TIMESTAMP_SUB(""last_updated_at"", INTERVAL 5 MINUTE), MINUTE)
+      AND TIMESTAMP_TRUNC(""last_updated_at"", MINUTE)
+      AND ""action_type"" = 'attempt'
+  ),
+  yilan_users AS
+  -- 從宜蘭用戶識別表中選擇用戶主鍵和宜蘭郵箱對應關係。
+  (
+    SELECT
+      ""user_primary_key"",
+      ""yilan_email""
+    FROM
+      ""data_mart"".""dim_user_identifications_of_yilan""
+  ),
+  quiz_with_title AS
+  -- 從Perseus問題維度表中聚合題目標題和子標題資訊。
+  (
+    SELECT
+      CAST(""quiz_id"" AS STRING) AS ""quiz_id"",
+      STRING_AGG(DISTINCT ""title"") AS ""title_list"",
+      STRING_AGG(DISTINCT ""sub_title"") AS ""sub_title_list""
+    FROM
+      ""data_mart"".""dim_perseus_questions"",
+      UNNEST(""title_list"") AS ""title"",
+      UNNEST(""sub_title_list"") AS ""sub_title""
+    WHERE
+      ""title_list"" IS NOT NULL
+    GROUP BY
+      ""quiz_id""
+  )
+-- 結合作答記錄、宜蘭用戶資訊和題目標題，按時間戳降序排列。
+SELECT
+  ""y"".""yilan_email"",
+  ""p"".""exercise_id"",
+  ""p"".""quiz_id"",
+  ""q"".""title_list"",
+  ""q"".""sub_title_list"",
+  ""p"".""time_taken"",
+  ""p"".""is_correct"",
+  ""p"".""timestamp""
+FROM
+  ""log_problem"" AS ""p""
+  INNER JOIN ""yilan_users"" AS ""y"" USING (""user_primary_key"")
+  LEFT JOIN ""quiz_with_title"" AS ""q"" USING (""quiz_id"")
+ORDER BY
+  ""timestamp"" DESC",20,2025-06-20T08:00:15.000Z,2025-06-20T08:00:15.000Z
+指定範圍影片使用情形的所有影片加總統計如何？,"DECLARE ""target_id"" STRING DEFAULT '{{target_id}}';
+DECLARE ""start_date"" DATE DEFAULT '{{start_time}}';
+DECLARE ""end_date"" DATE DEFAULT '{{end_time}}';
+
+WITH
+  get_content_details AS
+  -- 根據目標資料夾ID取得對應的內容詳細資訊和子資料夾名稱。
+  (
+    SELECT
+      ""content_id"",
+      CASE ""target_id""
+        WHEN ""level1_id"" THEN ""level2_name""
+        WHEN ""level2_id"" THEN ""level3_name""
+        WHEN ""level3_id"" THEN ""level4_name""
+        WHEN ""level4_id"" THEN ""level5_name""
+        WHEN ""level5_id"" THEN ""level6_name""
+        WHEN ""level6_id"" THEN ""level7_name""
+        ELSE 'OVER8'
+      END AS ""sub_folder""
+    FROM
+      ""data_mart"".""dim_contents""
+    WHERE
+      ""level1_id"" = ""target_id""
+      OR ""level2_id"" = ""target_id""
+      OR ""level3_id"" = ""target_id""
+      OR ""level4_id"" = ""target_id""
+      OR ""level5_id"" = ""target_id""
+      OR ""level6_id"" = ""target_id""
+    GROUP BY
+      ""content_id"",
+      ""sub_folder""
+    ORDER BY
+      ""sub_folder""
+  ),
+  user_data AS
+  -- 選擇非管理員和非開發者的一般用戶。
+  (
+    SELECT
+      ""user_id""
+    FROM
+      ""data_mart"".""dim_user_data""
+    WHERE
+      NOT ""is_moderator""
+      AND NOT ""is_developer""
+  ),
+  calculate_results AS
+  -- 計算影片使用相關的統計數據，包括觀看人數、完成人數、觀看時間等。
+  (
+    SELECT
+      ""c"".""sub_folder"",
+      COUNT(DISTINCT ""v"".""video_id"") AS ""total_videos_count"",
+      COUNT(DISTINCT ""v"".""user_id"") AS ""total_users_count"",
+      COUNT(DISTINCT IF(""v"".""is_video_completed"", ""v"".""user_id"", NULL)) AS ""total_completed_users_count"",
+      COUNT(DISTINCT CONCAT(""v"".""user_id"", ""v"".""video_id"")) AS ""total_views_count"",
+      COUNT(DISTINCT IF(""v"".""is_video_completed"", CONCAT(""v"".""user_id"", ""v"".""video_id""), NULL)) AS ""total_completed_views_count"",
+      ROUND(SUM(""v"".""total_seconds_taken"") / 60) AS ""total_minutes_taken""
+    FROM
+      ""data_mart"".""fct_user_records_of_video_completions_grained_to_date"" AS ""v""
+      INNER JOIN ""get_content_details"" AS ""c"" ON ""v"".""video_id"" = ""c"".""content_id""
+      INNER JOIN ""user_data"" USING (""user_id"")
+    WHERE
+      (""v"".""created_date"" BETWEEN ""start_date"" AND ""end_date"")
+      AND (""v"".""partition_date"" BETWEEN ""start_date"" AND DATE_ADD(""end_date"", INTERVAL 3 DAY))
+    GROUP BY
+      ""sub_folder""
+  ),
+  calculate_ratio AS
+  -- 計算完成率相關的比例指標。
+  (
+    SELECT
+      *,
+      ROUND(""total_completed_users_count"" / ""total_users_count"" * 100, 2) AS ""completed_rate_by_users"",
+      ROUND(""total_completed_views_count"" / ""total_views_count"" * 100, 2) AS ""completed_rate_by_views""
+    FROM
+      ""calculate_results""
+  )
+-- 按總觀看時間降序排列結果。
+SELECT
+  *
+FROM
+  ""calculate_ratio""
+ORDER BY
+  ""total_minutes_taken"" DESC",20,2025-06-20T08:00:16.000Z,2025-06-20T08:00:16.000Z
+昨日總客服量是多少？,"-- 計算昨日（不包含今日）的客服案件總數量。
+SELECT
+  COUNT(*) AS ""total_customer_service_count""
+FROM
+  ""Customer_Service_Issue""
+WHERE
+  ""Created_At_UTC"" >= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -1 DAY), DAY)
+  AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY)",20,2025-06-20T08:00:17.000Z,2025-06-20T08:00:17.000Z
+過去14天個案隸屬組別分佈如何？,"-- 統計過去14天客服案件按隸屬組別的分佈情況。
+SELECT
+  ""Belonged_Group"",
+  COUNT(*) AS ""count""
+FROM
+  ""Team_Product"".""Customer_Service_Issue""
+WHERE
+  ""Created_At_UTC"" >= TIMESTAMP('2023-03-01 00:00:00 Asia/Taipei')
+  AND ""Created_At_UTC"" >= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -14 DAY), DAY)
+  AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 1 DAY), DAY)
+GROUP BY
+  ""Belonged_Group"",
+  ""Created_At_UTC""
+ORDER BY
+  ""Created_At_UTC"" ASC,
+  ""Belonged_Group"" ASC",20,2025-06-20T08:00:18.000Z,2025-06-20T08:00:18.000Z
+過去N天回報結案狀態分布如何？,"-- 統計2023年3月1日以來的客服案件結案狀態分布，按日期和狀態分組。
+SELECT
+  ""State"",
+  DATE(""Created_At_UTC"") AS ""created_date"",
+  COUNT(*) AS ""count""
+FROM
+  ""Customer_Service_Issue""
+WHERE
+  ""Created_At_UTC"" > TIMESTAMP('2023-02-28')
+GROUP BY
+  ""State"",
+  ""created_date""
+ORDER BY
+  ""created_date"" ASC,
+  ""State"" ASC",20,2025-06-20T08:00:19.000Z,2025-06-20T08:00:19.000Z
+過去14天回報組成依小分類區別的分布如何？,"-- 統計過去14天客服回報按小分類標籤的組成分布。
+SELECT
+  CASE
+    WHEN ""Labels"" LIKE '%習題問題::觀念有誤%'
+    OR ""Labels"" LIKE '%其他::無法重現%'
+    OR ""Labels"" LIKE '%無效回報%'
+    OR ""Labels"" LIKE '%習題問題::認為太難%' THEN '快速處理之回報'
+    WHEN ""Labels"" LIKE '%產品組%' THEN '產品組之回報'
+    WHEN ""Labels"" LIKE '%內容組%' THEN '內容組之回報'
+    ELSE ""Labels""
+  END AS ""Labels"",
+  TIMESTAMP_TRUNC(""Created_At_UTC"", DAY) AS ""Created_At_UTC"",
+  COUNT(*) AS ""count""
+FROM
+  ""Team_Product"".""Customer_Service_Issue""
+WHERE
+  ""Created_At_UTC"" >= TIMESTAMP('2023-03-01 00:00:00 Asia/Taipei')
+  AND ""Created_At_UTC"" >= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -14 DAY), DAY)
+  AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 1 DAY), DAY)
+GROUP BY
+  ""Labels"",
+  ""Created_At_UTC""
+ORDER BY
+  ""Created_At_UTC"" ASC,
+  ""count"" DESC,
+  ""Labels"" ASC
+LIMIT 1048575",20,2025-06-20T08:00:20.000Z,2025-06-20T08:00:20.000Z
+過去14天回報組成依身份區別的分布如何？,"-- 統計過去14天客服回報按用戶身份的組成分布。
+SELECT
+  ""User_role"",
+  COUNT(*) AS ""count""
+FROM
+  ""Team_Product"".""Customer_Service_Issue""
+WHERE
+  ""Created_At_UTC"" >= TIMESTAMP('2023-03-01 00:00:00 Asia/Taipei')
+  AND ""Created_At_UTC"" >= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -14 DAY), DAY)
+  AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 1 DAY), DAY)
+GROUP BY
+  ""User_role""
+ORDER BY
+  ""count"" DESC,
+  ""User_role"" ASC",20,2025-06-20T08:00:21.000Z,2025-06-20T08:00:21.000Z
+夏日大作戰客服的統計量如何？,"-- 統計過去6個月內包含夏日大作戰標籤的客服案件數量，按週和子分類分組。
+SELECT
+  DATE_TRUNC(""Created_At_UTC"", WEEK) AS ""created_week"",
+  ""Sub_Category"",
+  COUNT(*) AS ""count""
+FROM
+  ""Customer_Service_Issue""
+WHERE
+  ""Labels"" LIKE '%行銷組/夏日大作戰%'
+  AND ""Created_At_UTC"" >= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL -6 MONTH), DAY)
+  AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY)
+GROUP BY
+  ""created_week"",
+  ""Sub_Category""
+ORDER BY
+  ""created_week"" ASC,
+  ""Sub_Category"" ASC",20,2025-06-20T08:00:22.000Z,2025-06-20T08:00:22.000Z
+指定範圍影片使用情形的使用者縣市分佈如何？,"DECLARE ""target_id"" STRING DEFAULT '{{target_id}}';
+
+WITH
+  content_id_selected AS
+  -- 根據目標資料夾ID選擇對應的內容ID。
+  (
+    SELECT DISTINCT
+      ""content_id""
+    FROM
+      ""data_mart"".""dim_contents""
+    WHERE
+      ""level1_id"" = ""target_id""
+      OR ""level2_id"" = ""target_id""
+      OR ""level3_id"" = ""target_id""
+      OR ""level4_id"" = ""target_id""
+      OR ""level5_id"" = ""target_id""
+      OR ""level6_id"" = ""target_id""
+  ),
+  video_log AS
+  -- 從影片觀看記錄中選擇指定時間範圍內的不重複用戶。
+  (
+    SELECT DISTINCT
+      ""user_id""
+    FROM
+      ""data_mart"".""fct_user_records_of_video_completions_grained_to_date"" AS ""v""
+      INNER JOIN ""content_id_selected"" AS ""c"" ON ""v"".""video_id"" = ""c"".""content_id""
+    WHERE
+      ""created_date"" BETWEEN '{{start_time}}' AND '{{end_time}}'
+      AND ""partition_date"" BETWEEN '{{start_time}}' AND DATE_ADD('{{end_time}}', INTERVAL 3 DAY)
+  ),
+  user_data AS
+  -- 選擇非管理員和非開發者的用戶城市資訊。
+  (
+    SELECT
+      ""user_id"",
+      ""user_city""
+    FROM
+      ""data_mart"".""dim_user_data""
+    WHERE
+      NOT ""is_moderator""
+      AND NOT ""is_developer""
+  )
+-- 統計各縣市的影片觀看用戶數量分布。
+SELECT
+  COALESCE(""u"".""user_city"", '未知') AS ""user_city"",
+  COUNT(DISTINCT ""v"".""user_id"") AS ""user_cnt""
+FROM
+  ""video_log"" AS ""v""
+  INNER JOIN ""user_data"" AS ""u"" USING (""user_id"")
+GROUP BY
+  ""user_city""
+ORDER BY
+  ""user_cnt"" DESC",20,2025-06-20T08:00:23.000Z,2025-06-20T08:00:23.000Z
+捐款後問卷留言內容有哪些？,"-- 查詢捐款完成後有留言的問卷內容，包含捐款者資訊和留言內容。
+SELECT
+  ""name"",
+  DATE_FORMAT(DATE_ADD(TIMESTAMP(""created_at""), INTERVAL 8 HOUR), '%Y-%m-%d %H:%i:%S') AS ""created_at"",
+  ""comment"",
+  ""amount"",
+  ""is_monthly"",
+  CONCAT('https://donate.junyiacademy.org/donation/admin/(?P', ""id"", '%5Cd+)/') AS ""donation_info""
+FROM
+  ""donation_data""
+WHERE
+  ""status"" = 'PA'
+  AND ""post_questionnaire"" NOT LIKE ""% 其他想對均一說的話': ['']%""
+ORDER BY
+  ""created_at"" DESC",20,2025-06-20T08:00:24.000Z,2025-06-20T08:00:24.000Z
