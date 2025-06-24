@@ -53,7 +53,7 @@ monthly_user_records AS
 SELECT
 SUM(""f"".""points_earned"") AS ""total_points_earned"",
 SUM(""f"".""total_seconds_taken"") AS ""total_seconds_taken"",
-DATE_TRUNC(""f"".""created_at_tw"", 'MONTH') AS ""month""
+DATE_TRUNC(""f"".""created_at_tw"", MONTH) AS ""month""
 FROM
 ""data_mart"".""fct_user_records_of_all_contents"" AS ""f""
 WHERE
@@ -236,7 +236,7 @@ WITH get_user_records_of_all_contents AS (
 -- 取得所有內容的用戶記錄，包含用戶基本資訊
 SELECT
 ""a"".""user_id"",
-DATE_TRUNC(""a"".""created_date"", 'MONTH') AS ""created_month"",
+DATE_TRUNC(""a"".""created_date"", MONTH) AS ""created_month"",
 ""a"".""total_seconds_taken"",
 ""a"".""is_mission_mode"",
 ""b"".""user_city"",
@@ -248,7 +248,7 @@ FROM ""data_mart"".""fct_user_records_of_all_contents_grained_to_users"" AS ""a"
 LEFT JOIN ""data_mart"".""dim_user_data"" AS ""b""
 USING(""user_id"")
 WHERE
-DATE_TRUNC(""a"".""created_date"", 'MONTH') = DATE('2024-01-01')
+DATE_TRUNC(""a"".""created_date"", MONTH) = DATE('2024-01-01')
 AND ""partition_date"" BETWEEN DATE('2024-01-01')
 AND DATE_ADD(DATE('2024-01-01'), INTERVAL 34 DAY)
 AND ""user_id"" IS NOT NULL
@@ -278,7 +278,7 @@ assign_mission_logs AS (
 -- 取得任務指派記錄
 SELECT DISTINCT ""assigner_id"", ""class_id""
 FROM ""data_mart"".""fct_user_records_of_missions_grained_to_tasks""
-WHERE DATE_TRUNC(DATE(""created_at_tw""), 'MONTH') = DATE('2024-01-01')
+WHERE DATE_TRUNC(DATE(""created_at_tw""), MONTH) = DATE('2024-01-01')
 ),
 get_class_activity AS (
 -- 取得班級活動統計
@@ -296,7 +296,7 @@ ON ""a"".""teacher_user_id"" = ""b"".""assigner_id""
 INNER JOIN ""data_mart"".""dim_user_data"" AS ""c""
 ON ""a"".""teacher_user_id"" = ""c"".""user_id""
 CROSS JOIN UNNEST(GENERATE_DATE_ARRAY(
-DATE_TRUNC(DATE(""a"".""valid_from_tw""), 'MONTH'),
+DATE_TRUNC(DATE(""a"".""valid_from_tw""), MONTH),
 DATE(""a"".""valid_to_tw""),
 INTERVAL 1 MONTH
 )) AS ""month""
@@ -1279,7 +1279,7 @@ ORDER BY
 ""hour_of_day""",20,2025-06-20T08:00:13.000Z,2025-06-20T08:00:13.000Z
 內容月使用人次趨勢如何？,"-- 計算各類內容的月使用人次趨勢，按月份和內容類型分組統計。
 SELECT
-DATE_TRUNC(""created_date"", 'MONTH') AS ""created_month"",
+DATE_TRUNC(""created_date"", MONTH) AS ""created_month"",
 ""content_kind"",
 SUM(""total_users"") AS ""total_usage_by_month""
 FROM

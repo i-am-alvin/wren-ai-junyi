@@ -1,7 +1,7 @@
 question,sql,project_id,created_at,updated_at
 請告訴我目前 dim_user_data 表中有多少筆總紀錄？,"-- 從 dim_user_data 表中計算總記錄數。
 SELECT
-COUNT(*) AS ""total_records""
+COUNT() AS ""total_records""
 FROM
 ""data_mart"".""dim_user_data"" AS ""_dim_user_data""",20,2025-05-16T04:28:56.000Z,2025-05-16T04:28:56.000Z
 每天註冊的用戶數量是多少？,"WITH
@@ -22,7 +22,7 @@ FROM
 -- 對基本註冊數據進行分組，計算每天註冊的用戶數量，並按註冊日期排序。
 SELECT
 ""registration_date"",
-COUNT(*) AS ""daily_registered_users""
+COUNT() AS ""daily_registered_users""
 FROM
 ""basic_registration_data""
 GROUP BY
@@ -53,7 +53,7 @@ monthly_user_records AS
 SELECT
 SUM(""f"".""points_earned"") AS ""total_points_earned"",
 SUM(""f"".""total_seconds_taken"") AS ""total_seconds_taken"",
-DATE_TRUNC(""f"".""created_at_tw"", 'MONTH') AS ""month""
+DATE_TRUNC(""f"".""created_at_tw"", MONTH) AS ""month""
 FROM
 ""data_mart"".""fct_user_records_of_all_contents"" AS ""f""
 WHERE
@@ -88,7 +88,7 @@ WHERE
 SELECT
 ""lv1"".""session_year_type_tw"" AS ""session_year_type_tw"",
 ""d"".""user_city"" AS ""user_city"",
-COUNT(*) AS ""Lv1_Teacher_Count""
+COUNT() AS ""Lv1_Teacher_Count""
 FROM
 ""lv1_teachers"" AS ""lv1""
 JOIN ""data_mart"".""dim_user_data"" AS ""d"" ON ""lv1"".""teacher_user_id"" = ""d"".""user_id""
@@ -114,7 +114,7 @@ WHERE
 SELECT
 ""lv1"".""session_year_type_tw"" AS ""session_year_type_tw"",
 ""d"".""user_city"" AS ""user_city"",
-COUNT(*) AS ""Lv1_Teacher_Count""
+COUNT() AS ""Lv1_Teacher_Count""
 FROM
 ""lv1_teachers"" AS ""lv1""
 JOIN ""data_mart"".""dim_user_data"" AS ""d"" ON ""lv1"".""teacher_user_id"" = ""d"".""user_id""
@@ -129,7 +129,7 @@ user_data AS
 -- 從 dim_user_data 表中計算總用戶數和註冊用戶數。
 (
 SELECT
-COUNT(*) AS ""total_users"",
+COUNT() AS ""total_users"",
 COUNT(
 CASE
 WHEN ""d"".""is_registered"" THEN 1
@@ -152,12 +152,12 @@ FROM
 WITH user_role_stats AS (
 SELECT
 user_role,
-COUNT(*) as user_count
+COUNT() as user_count
 FROM ""data_mart"".""dim_user_data""
 GROUP BY user_role
 )
 SELECT * FROM user_role_stats ORDER BY user_count DESC;",20,2025-06-19T23:01:26.000Z,2025-06-19T23:01:26.000Z
-測試問題,"SELECT COUNT(*) FROM ""data_mart"".""dim_user_data""",20,2025-06-19T23:02:56.000Z,2025-06-19T23:02:56.000Z
+測試問題,"SELECT COUNT() FROM ""data_mart"".""dim_user_data""",20,2025-06-19T23:02:56.000Z,2025-06-19T23:02:56.000Z
 測試 CTE,"-- CTE: 測試 - 簡單測試
 WITH test AS (SELECT 1 as id)
 SELECT * FROM test",20,2025-06-19T23:03:06.000Z,2025-06-19T23:03:06.000Z
@@ -182,7 +182,7 @@ WHERE NOT ""is_moderator"" AND NOT ""is_developer""
 -- 計算目標範圍內影片的評分統計
 SELECT
 '12345' AS ""target_id"",
-COUNT(*) AS ""rating_cnt"",
+COUNT() AS ""rating_cnt"",
 ROUND(AVG(""rating""), 2) AS ""avg_rating""
 FROM ""data_mart"".""fct_user_records_of_video_ratings"" AS ""A""
 INNER JOIN ""content_id_selected"" AS ""B""
@@ -236,7 +236,7 @@ WITH get_user_records_of_all_contents AS (
 -- 取得所有內容的用戶記錄，包含用戶基本資訊
 SELECT
 ""a"".""user_id"",
-DATE_TRUNC(""a"".""created_date"", 'MONTH') AS ""created_month"",
+DATE_TRUNC(""a"".""created_date"", MONTH) AS ""created_month"",
 ""a"".""total_seconds_taken"",
 ""a"".""is_mission_mode"",
 ""b"".""user_city"",
@@ -248,7 +248,7 @@ FROM ""data_mart"".""fct_user_records_of_all_contents_grained_to_users"" AS ""a"
 LEFT JOIN ""data_mart"".""dim_user_data"" AS ""b""
 USING(""user_id"")
 WHERE
-DATE_TRUNC(""a"".""created_date"", 'MONTH') = DATE('2024-01-01')
+DATE_TRUNC(""a"".""created_date"", MONTH) = DATE('2024-01-01')
 AND ""partition_date"" BETWEEN DATE('2024-01-01')
 AND DATE_ADD(DATE('2024-01-01'), INTERVAL 34 DAY)
 AND ""user_id"" IS NOT NULL
@@ -278,7 +278,7 @@ assign_mission_logs AS (
 -- 取得任務指派記錄
 SELECT DISTINCT ""assigner_id"", ""class_id""
 FROM ""data_mart"".""fct_user_records_of_missions_grained_to_tasks""
-WHERE DATE_TRUNC(DATE(""created_at_tw""), 'MONTH') = DATE('2024-01-01')
+WHERE DATE_TRUNC(DATE(""created_at_tw""), MONTH) = DATE('2024-01-01')
 ),
 get_class_activity AS (
 -- 取得班級活動統計
@@ -296,7 +296,7 @@ ON ""a"".""teacher_user_id"" = ""b"".""assigner_id""
 INNER JOIN ""data_mart"".""dim_user_data"" AS ""c""
 ON ""a"".""teacher_user_id"" = ""c"".""user_id""
 CROSS JOIN UNNEST(GENERATE_DATE_ARRAY(
-DATE_TRUNC(DATE(""a"".""valid_from_tw""), 'MONTH'),
+DATE_TRUNC(DATE(""a"".""valid_from_tw""), MONTH),
 DATE(""a"".""valid_to_tw""),
 INTERVAL 1 MONTH
 )) AS ""month""
@@ -816,14 +816,14 @@ ORDER BY ""month""",20,2025-06-19T23:19:00.000Z,2025-06-19T23:19:00.000Z
 總用戶數有多少？,"-- CTE: 總用戶統計 - 計算平台總用戶數
 WITH user_count AS (
 -- 計算所有用戶總數
-SELECT COUNT(*) AS ""total_users""
+SELECT COUNT() AS ""total_users""
 FROM ""data_mart"".""dim_user_data""
 )
 SELECT ""total_users"" FROM ""user_count""",20,2025-06-19T23:20:00.000Z,2025-06-19T23:20:00.000Z
 平台總內容數有多少？,"-- CTE: 內容統計 - 計算平台總內容數
 WITH content_count AS (
 -- 計算所有內容總數
-SELECT COUNT(*) AS ""total_contents""
+SELECT COUNT() AS ""total_contents""
 FROM ""data_mart"".""dim_contents""
 )
 SELECT ""total_contents"" FROM ""content_count""",20,2025-06-19T23:21:00.000Z,2025-06-19T23:21:00.000Z
@@ -926,7 +926,7 @@ FROM ""data_mart"".""dim_user_data"" AS ""u""
 ),
 content_overview AS (
 -- 計算內容相關統計
-SELECT COUNT(*) AS ""total_contents""
+SELECT COUNT() AS ""total_contents""
 FROM ""data_mart"".""dim_contents""
 ),
 interaction_overview AS (
@@ -973,7 +973,7 @@ CROSS JOIN ""content_overview"" AS ""c""
 CROSS JOIN ""interaction_overview"" AS ""i""",20,2025-06-19T23:32:00.000Z,2025-06-19T23:32:00.000Z
 每個使用者角色有多少人？（測試）,"-- CTE: 使用者統計 - 計算使用者總數
 WITH user_stats AS (
-SELECT user_role, COUNT(*) as user_count
+SELECT user_role, COUNT() as user_count
 FROM ""data_mart"".""dim_user_data"" GROUP BY user_role
 )
 SELECT user_role, user_count FROM user_stats ORDER BY user_count DESC;",20,2025-06-19T23:03:55.000Z,2025-06-19T23:03:55.000Z
@@ -1132,7 +1132,7 @@ COUNT(DISTINCT ""mission_id"") = 3
 )
 -- 計算完成所有三個任務的用戶總數。
 SELECT
-COUNT(*) AS ""mission_count""
+COUNT() AS ""mission_count""
 FROM
 ""mission_completed_list""",20,2025-06-20T08:00:02.000Z,2025-06-20T08:00:02.000Z
 各類使用者註冊人數分布如何？,"-- 計算各類使用者的註冊人數分布，處理空值角色為others。
@@ -1141,7 +1141,7 @@ CASE
 WHEN ""user_role"" IS NULL THEN 'others'
 ELSE ""user_role""
 END AS ""user_role"",
-COUNT(*) AS ""user_counts""
+COUNT() AS ""user_counts""
 FROM
 ""data_mart"".""dim_user_data""
 WHERE
@@ -1175,7 +1175,7 @@ COUNTIF(""user_role"" = 'student') AS ""student_cnt"",
 COUNTIF(""user_role"" = 'teacher') AS ""teacher_cnt"",
 COUNTIF(""user_role"" = 'parent') AS ""parent_cnt"",
 COUNTIF(""user_role"" = 'others') + COUNTIF(""user_role"" IS NULL) AS ""others_cnt"",
-COUNT(*) AS ""total_user_cnt""
+COUNT() AS ""total_user_cnt""
 FROM
 ""data_mart"".""dim_user_data""
 WHERE
@@ -1243,7 +1243,7 @@ ORDER BY
 ""active_user_cnt"" DESC",20,2025-06-20T08:00:09.000Z,2025-06-20T08:00:09.000Z
 2030 AI教育年會總完成任務包數是多少？,"-- 計算2030 AI教育年會今日總完成任務包數。
 SELECT
-COUNT(*) AS ""mission_completed""
+COUNT() AS ""mission_completed""
 FROM
 ""streaming_log"".""log_mission_completed_for_ai_summit_2030""
 WHERE
@@ -1279,7 +1279,7 @@ ORDER BY
 ""hour_of_day""",20,2025-06-20T08:00:13.000Z,2025-06-20T08:00:13.000Z
 內容月使用人次趨勢如何？,"-- 計算各類內容的月使用人次趨勢，按月份和內容類型分組統計。
 SELECT
-DATE_TRUNC(""created_date"", 'MONTH') AS ""created_month"",
+DATE_TRUNC(""created_date"", MONTH) AS ""created_month"",
 ""content_kind"",
 SUM(""total_users"") AS ""total_usage_by_month""
 FROM
@@ -1449,7 +1449,7 @@ ORDER BY
 ""total_minutes_taken"" DESC",20,2025-06-20T08:00:16.000Z,2025-06-20T08:00:16.000Z
 昨日總客服量是多少？,"-- 計算昨日（不包含今日）的客服案件總數量。
 SELECT
-COUNT(*) AS ""total_customer_service_count""
+COUNT() AS ""total_customer_service_count""
 FROM
 ""Customer_Service_Issue""
 WHERE
@@ -1458,7 +1458,7 @@ AND ""Created_At_UTC"" < TIMESTAMP_TRUNC(CURRENT_TIMESTAMP(), DAY)",20,2025-06-2
 過去14天個案隸屬組別分佈如何？,"-- 統計過去14天客服案件按隸屬組別的分佈情況。
 SELECT
 ""Belonged_Group"",
-COUNT(*) AS ""count""
+COUNT() AS ""count""
 FROM
 ""Team_Product"".""Customer_Service_Issue""
 WHERE
@@ -1475,7 +1475,7 @@ ORDER BY
 SELECT
 ""State"",
 DATE(""Created_At_UTC"") AS ""created_date"",
-COUNT(*) AS ""count""
+COUNT() AS ""count""
 FROM
 ""Customer_Service_Issue""
 WHERE
@@ -1498,7 +1498,7 @@ WHEN ""Labels"" LIKE '%內容組%' THEN '內容組之回報'
 ELSE ""Labels""
 END AS ""Labels"",
 TIMESTAMP_TRUNC(""Created_At_UTC"", DAY) AS ""Created_At_UTC"",
-COUNT(*) AS ""count""
+COUNT() AS ""count""
 FROM
 ""Team_Product"".""Customer_Service_Issue""
 WHERE
@@ -1516,7 +1516,7 @@ LIMIT 1048575",20,2025-06-20T08:00:20.000Z,2025-06-20T08:00:20.000Z
 過去14天回報組成依身份區別的分布如何？,"-- 統計過去14天客服回報按用戶身份的組成分布。
 SELECT
 ""User_role"",
-COUNT(*) AS ""count""
+COUNT() AS ""count""
 FROM
 ""Team_Product"".""Customer_Service_Issue""
 WHERE
