@@ -50,7 +50,7 @@ def create_sql_pair(question, sql, ui_graphql_endpoint):
         return f'EXCEPTION: {e}'
 
 def main():
-    csv_file = 'data/sql_pairs.csv'
+    csv_file = 'docker/data/sql_pairs.csv'
     ui_graphql_endpoint = 'http://localhost:3000/api/graphql'
     
     print('🚀 開始匯入原始 CSV 中的 SQL pairs...')
